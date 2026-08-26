@@ -30,6 +30,10 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
+        // บันทึกเวลาเข้าระบบล่าสุดโดยไม่แตะ updated_at เพื่อไม่ให้ activity log
+        // มีรายการเปลี่ยนแปลงผู้ใช้ทุกครั้งที่ล็อกอิน
+        $request->user()->forceFill(['last_login_at' => now()])->saveQuietly();
+
         return redirect()->intended(route('dashboard', absolute: false));
     }
 

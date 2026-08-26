@@ -66,7 +66,10 @@ test('user can delete their account', function () {
         ->assertRedirect('/');
 
     $this->assertGuest();
-    $this->assertNull($user->fresh());
+
+    // User ใช้ soft delete เพื่อให้เอกสารเก่าที่อ้างถึงผู้ใช้คนนี้ยังอ่านชื่อผู้ทำรายการได้
+    $this->assertSoftDeleted($user);
+    $this->assertNull(User::find($user->id));
 });
 
 test('correct password must be provided to delete account', function () {

@@ -1,3 +1,26 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+    /* ตัวเลขในตารางต้องเรียงตรงหลักกัน อ่านยอดเงินง่ายขึ้น */
+    .tabular {
+        font-variant-numeric: tabular-nums;
+    }
+}
+
+@layer components {
+    .form-input-base {
+        @apply block w-full rounded-md border-gray-300 shadow-sm
+               focus:border-aqua-400 focus:ring-aqua-400
+               disabled:bg-gray-100 disabled:text-gray-500;
+    }
+
+    .table-head-cell {
+        @apply px-4 py-3 text-start text-xs font-semibold uppercase tracking-wide text-navy-700;
+    }
+
+    .table-cell-base {
+        @apply whitespace-nowrap px-4 py-3 text-sm text-gray-700;
+    }
+}

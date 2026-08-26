@@ -44,7 +44,11 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // บัญชีที่ถูกปิดใช้งานต้องเข้าไม่ได้ และต้องได้ข้อความเดียวกับรหัสผ่านผิด
+        // เพื่อไม่ให้เดาได้ว่าอีเมลนี้มีอยู่จริงในระบบ
+        $credentials = [...$this->only('email', 'password'), 'is_active' => true];
+
+        if (! Auth::attempt($credentials, $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
