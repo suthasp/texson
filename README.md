@@ -5,7 +5,7 @@
 **Phase 1 (ปัจจุบัน):** Spare Part Inventory + Quotation/Sales — ใช้งานภายในองค์กร
 **Phase 2 (อนาคต):** Work Order PM/CM, Asset Register, Contract/SLA — ดู [docs/PHASE2-NOTES.md](docs/PHASE2-NOTES.md)
 
-สเปกฉบับเต็มอยู่ที่ [CLAUDE.md](CLAUDE.md) · ERD อยู่ที่ [docs/ERD.md](docs/ERD.md)
+สเปกฉบับเต็มอยู่ที่ [CLAUDE.md](CLAUDE.md) · ERD อยู่ที่ [docs/ERD.md](docs/ERD.md) · REST API อยู่ที่ [docs/API.md](docs/API.md)
 
 ---
 
@@ -21,7 +21,7 @@
 | PDF | `barryvdh/laravel-dompdf` + ฟอนต์ Sarabun |
 | Excel | `maatwebsite/excel` |
 | Audit | `spatie/laravel-activitylog` |
-| API | Laravel Sanctum (REST v1) |
+| API | Laravel Sanctum (REST v1) — ดู [docs/API.md](docs/API.md) |
 | Test | Pest 3 + `RefreshDatabase` |
 | Style | Laravel Pint (preset laravel) |
 
@@ -101,6 +101,7 @@ php artisan serve
 | `php artisan migrate:fresh --seed` | ล้าง DB แล้วสร้างใหม่พร้อมข้อมูลตัวอย่าง |
 | `php artisan quotations:expire` | เปลี่ยนใบเสนอราคาที่เลยวันยืนราคาเป็นหมดอายุ (ตั้งเวลาไว้ 06:00 ทุกวัน) |
 | `php artisan schedule:work` | รัน scheduler บนเครื่องพัฒนา |
+| `php artisan route:list --path=api` | ดู endpoint ทั้งหมดของ REST API |
 
 ---
 
@@ -112,7 +113,7 @@ app/
 ├── Services/               # Business logic ทั้งหมด
 ├── Http/
 │   ├── Controllers/Web/    # Blade CRUD
-│   ├── Controllers/Api/V1/ # REST
+│   ├── Controllers/Api/V1/ # REST v1 (Sanctum token)
 │   ├── Requests/           # FormRequest ทุก endpoint ที่รับ input
 │   └── Resources/          # API Resource ทุก response
 ├── Policies/               # Authorization ทุก model
@@ -133,6 +134,7 @@ app/
 | 1 | Master data: users/roles, customers+contacts+sites, categories, brands, suppliers, warehouses, products | ✅ เสร็จ |
 | 2 | Inventory: stock levels, ledger, รับเข้า, ปรับปรุง, โอนคลัง, serial, low-stock | ✅ เสร็จ |
 | 3 | Quotation: CRUD, คำนวณ, lifecycle, revision, อนุมัติ, PDF ไทย/อังกฤษ, ส่งเมล | ✅ เสร็จ |
+| — | REST API v1 (สเปกข้อ 6) — สินค้า ลูกค้า สต็อก ใบเสนอราคา รายงาน | ✅ เสร็จ |
 | 4 | Sales Order → Delivery → ตัดสต็อก + serial + backorder | ⬜ |
 | 5 | Dashboard + รายงาน + Excel export | ⬜ |
 | 6 | Hardening + `docs/SECURITY.md` + คู่มือผู้ใช้ | ⬜ |

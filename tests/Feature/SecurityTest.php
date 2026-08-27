@@ -98,5 +98,6 @@ it('ล็อกอินผิดเกิน 5 ครั้งต่อนา�
 });
 
 it('เข้า API โดยไม่มี token ได้ 401', function (): void {
-    $this->getJson('/api/user')->assertUnauthorized();
+    // เทสต์ครบทุก endpoint ของ API อยู่ที่ tests/Feature/Api/ApiAuthTest.php
+    $this->getJson('/api/v1/auth/me')->assertUnauthorized();
 });
