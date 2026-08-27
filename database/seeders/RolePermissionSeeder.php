@@ -62,6 +62,10 @@ class RolePermissionSeeder extends Seeder
             ...PermissionName::readOnlyForResource('product'),
             ...PermissionName::readOnlyForResource('supplier'),
             ...$quotationWithoutApprove,
+            // ใบสั่งขายเป็นงานต่อจากใบเสนอราคา แต่การจ่ายของจริงเป็นงานคลัง
+            // ฝ่ายขายจึงดูใบส่งของได้อย่างเดียว ออกและ post ไม่ได้
+            ...PermissionName::forResource('sales_order'),
+            ...PermissionName::readOnlyForResource('delivery'),
             // ฝ่ายขายต้องเห็นราคาทุนตั้งแต่ Phase 3 (ADR-012) — สเปกข้อ 4.5 บังคับให้
             // margin ขึ้นสดบนหน้าจอตอนออกใบ ซึ่งเป็นหน้าจอของฝ่ายขายเอง
             PermissionName::ProductViewCost->value,
@@ -80,6 +84,10 @@ class RolePermissionSeeder extends Seeder
             ...PermissionName::forResource('stock_transfer'),
             ...PermissionName::forResource('stock_adjustment'),
             ...PermissionName::forResource('serial'),
+            // ต้องเห็นใบสั่งขายทุกใบเพื่อจัดของส่ง แต่ไม่แก้ราคาหรือยกเลิกใบของฝ่ายขาย
+            PermissionName::SalesOrderViewAny->value,
+            PermissionName::SalesOrderView->value,
+            ...PermissionName::forResource('delivery'),
         ];
 
         return [
@@ -120,6 +128,7 @@ class RolePermissionSeeder extends Seeder
                 PermissionName::StockViewLedger->value,
                 ...PermissionName::readOnlyForResource('serial'),
                 ...PermissionName::readOnlyForResource('stock_transfer'),
+                ...PermissionName::readOnlyForResource('delivery'),
             ],
 
             RoleName::Viewer->value => [
@@ -134,6 +143,8 @@ class RolePermissionSeeder extends Seeder
                 ...PermissionName::readOnlyForResource('goods_receipt'),
                 ...PermissionName::readOnlyForResource('stock_transfer'),
                 ...PermissionName::readOnlyForResource('stock_adjustment'),
+                ...PermissionName::readOnlyForResource('sales_order'),
+                ...PermissionName::readOnlyForResource('delivery'),
             ],
         ];
     }

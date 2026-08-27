@@ -154,6 +154,25 @@ class QuotationPolicy
             && $this->owns($user, $quotation);
     }
 
+    // ── แปลงเป็นใบสั่งขาย (spec 4.3) ────────────────────────
+
+    public function convertToSalesOrder(User $user, Quotation $quotation): bool
+    {
+        return $this->convertToSalesOrderAny($user, $quotation)
+            && $quotation->status === QuotationStatus::Accepted
+            // แปลงได้ครั้งเดียวต่อใบ — ซ่อนปุ่มทันทีที่แปลงไปแล้ว
+            && $quotation->salesOrder()->doesntExist();
+    }
+
+    /**
+     * ตรวจแค่สิทธิ์ — ให้ "สถานะยังไม่ accepted" และ "แปลงไปแล้ว" ตกไปเป็น 409 ฝั่ง API
+     */
+    public function convertToSalesOrderAny(User $user, Quotation $quotation): bool
+    {
+        return $user->can(PermissionName::SalesOrderCreate->value)
+            && $this->owns($user, $quotation);
+    }
+
     /**
      * พิมพ์ PDF ได้ทุกใบที่เปิดดูได้ — เอกสารที่เห็นบนจอกับที่พิมพ์ต้องเป็นชุดเดียวกัน
      */

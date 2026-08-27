@@ -1,7 +1,7 @@
 # TEXSON Platform — ERD Phase 1
 
 > อ้างอิง `CLAUDE.md` หัวข้อ 3 (Database Schema) และ 12.2
-> สถานะ: **สร้างจริงแล้วถึง Phase 3** — ส่วนที่ต่างจากแบบร่างเดิมสรุปไว้ในหัวข้อ 3
+> สถานะ: **สร้างจริงแล้วถึง Phase 4** — ส่วนที่ต่างจากแบบร่างเดิมสรุปไว้ในหัวข้อ 3
 
 ## 1. ภาพรวมโดเมน
 
@@ -133,6 +133,52 @@ erDiagram
         cost_snapshot decimal_15_2 "มาจาก products.cost_price เท่านั้น (ADR-013)"
         lead_time_days smallint
     }
+    SALES_ORDERS {
+        id bigint PK
+        so_no string "UK"
+        quotation_id bigint FK "UK · nullable (ADR-019)"
+        customer_id bigint FK
+        warehouse_id bigint FK "คลังที่จองและจ่ายของ (ADR-017)"
+        sales_user_id bigint FK
+        customer_po_no string
+        customer_po_file string "storage/app/private"
+        order_date date
+        required_date date
+        status enum "pending/reserved/partially_delivered/delivered/cancelled"
+        grand_total decimal_15_2 "ยกมาจากใบเสนอราคาทั้งชุด"
+        confirmed_at timestamp
+        deleted_at timestamp
+    }
+    SALES_ORDER_ITEMS {
+        id bigint PK
+        sales_order_id bigint FK
+        quotation_item_id bigint FK "nullable"
+        product_id bigint FK "null = ค่าแรง/ค่าขนส่ง (ADR-020)"
+        description text "snapshot"
+        unit_price decimal_15_2 "snapshot"
+        qty_ordered decimal_15_3
+        qty_reserved decimal_15_3 "< qty_ordered ได้ = backorder"
+        qty_delivered decimal_15_3
+    }
+    DELIVERIES {
+        id bigint PK
+        delivery_no string "UK"
+        sales_order_id bigint FK
+        warehouse_id bigint FK "คลังที่จ่ายจริง"
+        delivery_date date "= warranty_start ของ serial"
+        status enum "draft/posted/cancelled"
+        receiver_name string
+        posted_at timestamp
+    }
+    DELIVERY_ITEMS {
+        id bigint PK
+        delivery_id bigint FK
+        sales_order_item_id bigint FK
+        product_id bigint FK "nullable"
+        qty decimal_15_3
+        serial_numbers json "เปลี่ยนเป็น sold ตอน post"
+        lot_no string
+    }
     SETTINGS {
         id bigint PK
         key string "UK · ข้อมูลบริษัท / ค่าเริ่มต้นเอกสาร / เกณฑ์อนุมัติ"
@@ -156,6 +202,10 @@ erDiagram
 | ถูกแทนที่ | `superseded_at` แยกจาก `status` เพื่อไม่ให้รายงาน win rate เพี้ยน | [ADR-002](DECISIONS.md) |
 | ต้นทุนในบรรทัด | เขียนทับจาก `products.cost_price` เสมอ ไม่รับจากฟอร์ม | [ADR-013](DECISIONS.md) |
 | เอกสารคลัง | `goods_receipts` และ `stock_transfers` เพิ่มเข้ามาเติมช่องว่างของ `ref_type` | [ADR-005](DECISIONS.md) |
+| คลังของใบสั่งขาย | เพิ่ม `sales_orders.warehouse_id` — จองของต้องรู้ว่าจองจากคลังไหน | [ADR-017](DECISIONS.md) |
+| จังหวะการจอง | สร้างเป็น `pending` → กดยืนยันจึงจอง | [ADR-018](DECISIONS.md) |
+| ที่มาของใบสั่งขาย | แปลงจากใบเสนอราคาเท่านั้น · `quotation_id` unique | [ADR-019](DECISIONS.md) |
+| บรรทัดที่ไม่มีของ | `product_id` null → ส่งมอบได้แต่ไม่แตะ ledger | [ADR-020](DECISIONS.md) |
 
 ## 4. เส้นทาง Phase 2 (ยังไม่สร้าง — บันทึกไว้ใน docs/PHASE2-NOTES.md)
 

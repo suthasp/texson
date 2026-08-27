@@ -35,6 +35,13 @@
                     <x-secondary-button type="submit">{{ __('สร้างฉบับแก้ไข') }}</x-secondary-button>
                 </form>
             @endcan
+
+            @can('convertToSalesOrder', $quotation)
+                <button type="button" x-data @click="$dispatch('open-modal', 'convert-to-so')"
+                        class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500">
+                    {{ __('สร้างใบสั่งขาย') }}
+                </button>
+            @endcan
         </x-slot>
     </x-page-header>
 
@@ -54,6 +61,13 @@
 
             @if ($quotation->isSuperseded())
                 <x-badge color="gray">{{ __('ถูกแทนที่ด้วยฉบับแก้ไขแล้ว') }}</x-badge>
+            @endif
+
+            @if ($quotation->salesOrder)
+                <a href="{{ route('sales-orders.show', $quotation->salesOrder) }}"
+                   class="tabular inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-0.5 text-xs font-medium text-emerald-800 transition hover:bg-emerald-200">
+                    {{ __('แปลงเป็นใบสั่งขาย :no แล้ว', ['no' => $quotation->salesOrder->so_no]) }}
+                </a>
             @endif
 
             @if ($quotation->status === QuotationStatus::Sent && $quotation->isPastValidity())
@@ -365,6 +379,45 @@
                     <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('ยกเลิก') }}</x-secondary-button>
                     <button type="submit" class="rounded-md bg-navy-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-navy-800">
                         {{ __('ส่ง') }}
+                    </button>
+                </div>
+            </form>
+        </x-modal>
+    @endcan
+
+    {{-- ── Modal: สร้างใบสั่งขาย (spec 4.3) ── --}}
+    @can('convertToSalesOrder', $quotation)
+        <x-modal name="convert-to-so" focusable>
+            <form method="POST" action="{{ route('quotations.convert', $quotation) }}" enctype="multipart/form-data" class="space-y-4 p-6">
+                @csrf
+                <h2 class="text-base font-semibold text-navy-900">{{ __('สร้างใบสั่งขายจาก :no', ['no' => $quotation->displayNo()]) }}</h2>
+
+                <p class="rounded-md bg-gray-50 px-3 py-2 text-xs text-gray-600">
+                    {{ __('รายการและราคาทั้งหมดยกมาจากใบนี้ · ใบเสนอราคาหนึ่งใบสร้างใบสั่งขายได้ครั้งเดียว') }}
+                </p>
+
+                <div class="grid gap-4 sm:grid-cols-2">
+                    <x-form.select name="warehouse_id" :label="__('คลังที่จ่ายของ')"
+                                   :options="$warehouses->mapWithKeys(fn ($w) => [$w->id => $w->code . ' — ' . $w->name])->all()"
+                                   :selected="$warehouses->firstWhere('is_default', true)?->id"
+                                   :help="__('คลังที่จะจองของเมื่อยืนยันใบ')" />
+
+                    <x-form.input name="required_date" type="date" :label="__('วันที่ต้องการรับของ')" />
+
+                    <x-form.input name="customer_po_no" :label="__('เลขที่ใบสั่งซื้อของลูกค้า')" />
+
+                    <div class="space-y-1">
+                        <label for="customer_po_file" class="block text-sm font-medium text-gray-700">{{ __('ไฟล์ใบสั่งซื้อ') }}</label>
+                        <input id="customer_po_file" name="customer_po_file" type="file" accept="application/pdf,image/png,image/jpeg"
+                               class="block w-full text-sm text-gray-600 file:me-3 file:rounded-md file:border-0 file:bg-navy-900 file:px-3 file:py-1.5 file:text-sm file:font-medium file:text-white">
+                        <x-input-error :messages="$errors->get('customer_po_file')" />
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <x-secondary-button type="button" x-on:click="$dispatch('close')">{{ __('ยกเลิก') }}</x-secondary-button>
+                    <button type="submit" class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500">
+                        {{ __('สร้างใบสั่งขาย') }}
                     </button>
                 </div>
             </form>

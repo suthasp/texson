@@ -4,10 +4,12 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Actions\ConvertQuotationToSalesOrder;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\QuotationUpdateRequest;
 use App\Http\Requests\QuotationRequest;
 use App\Http\Resources\QuotationResource;
+use App\Http\Resources\SalesOrderResource;
 use App\Mail\QuotationMail;
 use App\Models\Quotation;
 use App\Models\User;
@@ -185,6 +187,35 @@ class QuotationController extends Controller
         return $this->resource($revision)->additional([
             'meta' => ['superseded_quotation_id' => $quotation->id],
         ]);
+    }
+
+    /**
+     * POST /api/v1/quotations/{id}/convert-to-so (spec 6)
+     *
+     * ใบที่ยังไม่ accepted หรือแปลงไปแล้ว จะได้ 409 จาก action ไม่ใช่ 403 (ADR-014)
+     */
+    public function convertToSalesOrder(
+        Request $request,
+        Quotation $quotation,
+        ConvertQuotationToSalesOrder $convert,
+    ): JsonResponse {
+        $this->authorize('convertToSalesOrderAny', $quotation);
+
+        $data = $request->validate([
+            'warehouse_id' => ['nullable', 'integer', 'exists:warehouses,id'],
+            'order_date' => ['nullable', 'date'],
+            'required_date' => ['nullable', 'date', 'after_or_equal:order_date'],
+            'customer_po_no' => ['nullable', 'string', 'max:60'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $order = $convert->handle($quotation, $data);
+
+        return (new SalesOrderResource($order->load([
+            'items.product:id,sku,is_serialized',
+            'customer:id,code,name_th', 'warehouse:id,code,name', 'salesUser:id,name',
+            'quotation:id,quote_no,revision',
+        ])))->response()->setStatusCode(201);
     }
 
     /**

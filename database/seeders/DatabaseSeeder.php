@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             OpeningStockSeeder::class,
             // ต้องอยู่ท้ายสุด — ใบเสนอราคาตัวอย่างอ้างถึงลูกค้า สินค้า และผู้ใช้ที่สร้างไปแล้ว
             QuotationSeeder::class,
+            // ต้องอยู่หลัง QuotationSeeder เพราะแปลงจากใบที่ลูกค้าตอบรับแล้วเท่านั้น
+            SalesOrderSeeder::class,
         ]);
     }
 }

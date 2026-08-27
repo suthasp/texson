@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\QuotationStatus;
+use App\Enums\SalesOrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\StockLevelResource;
 use App\Models\Quotation;
+use App\Models\SalesOrder;
 use App\Models\StockLevel;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
@@ -44,9 +46,11 @@ class ReportController extends Controller
     /**
      * GET /api/v1/reports/sales-summary?from=&to= (spec 6)
      *
-     * ตอนนี้คิดจาก "ใบเสนอราคา" เพราะตาราง sales_orders ยังไม่มี (อยู่ใน Phase 4)
-     * meta.basis บอกฐานที่ใช้คำนวณไว้ชัดเจน เมื่อ Phase 4 เสร็จจะเพิ่มชุดตัวเลขจาก
-     * ใบสั่งขายเข้ามาเป็นฟิลด์ใหม่ ไม่แก้ความหมายของฟิลด์เดิม
+     * มีสองฐาน (ADR-015)
+     *  - quotations   = pipeline และ win rate จากใบเสนอราคา
+     *  - sales_orders = ยอดที่ปิดการขายจริงและความคืบหน้าการส่งของ (เพิ่มใน Phase 4)
+     *
+     * ฟิลด์เดิมของฐาน quotations ไม่ถูกแก้ความหมาย — ฐานใหม่เพิ่มเข้ามาเป็นบล็อกของตัวเอง
      */
     public function salesSummary(Request $request): JsonResponse
     {
@@ -86,6 +90,21 @@ class ReportController extends Controller
             '0.00',
         );
 
+        $orders = SalesOrder::query()
+            ->visibleTo($request->user())
+            ->whereBetween('order_date', [$from->toDateString(), $to->toDateString()])
+            ->with('items')
+            ->get();
+
+        $liveOrders = $orders->filter(
+            static fn (SalesOrder $order): bool => $order->status !== SalesOrderStatus::Cancelled,
+        );
+
+        $orderSum = static fn ($collection): string => $collection->reduce(
+            static fn (string $carry, SalesOrder $order): string => Money::add($carry, (string) $order->grand_total),
+            '0.00',
+        );
+
         return response()->json([
             'data' => [
                 'period' => [
@@ -109,13 +128,30 @@ class ReportController extends Controller
                 'win_rate_percent' => $decidedCount === 0
                     ? '0.00'
                     : Money::percentage((string) $accepted->count(), (string) $decidedCount),
+
+                // ── ฐานใบสั่งขาย: ยอดที่ปิดการขายจริง (เพิ่มใน Phase 4) ──
+                'sales_orders' => [
+                    'total' => $orders->count(),
+                    'open' => $liveOrders->filter(static fn (SalesOrder $o): bool => ! $o->status->isClosed())->count(),
+                    'delivered' => $orders->where('status', SalesOrderStatus::Delivered)->count(),
+                    'cancelled' => $orders->where('status', SalesOrderStatus::Cancelled)->count(),
+                    // ใบที่จองของไม่ครบ — ต้องสั่งของเพิ่มถึงจะส่งจบ (spec 4.4)
+                    'with_shortage' => $liveOrders->filter(static fn (SalesOrder $o): bool => $o->hasShortage())->count(),
+                    'amounts' => [
+                        'ordered' => $orderSum($liveOrders),
+                        'delivered' => $orderSum($orders->where('status', SalesOrderStatus::Delivered)),
+                        'cancelled' => $orderSum($orders->where('status', SalesOrderStatus::Cancelled)),
+                    ],
+                ],
             ],
             'meta' => [
-                // Phase 4 จะเพิ่มฐานจากใบสั่งขายเข้ามาโดยไม่แก้ความหมายของฟิลด์ที่มีอยู่
                 'basis' => 'quotations',
+                // ฐานที่ report นี้ครอบคลุม — ฟิลด์ระดับบนสุดยังคิดจากใบเสนอราคาเหมือนเดิม
+                'includes' => ['quotations', 'sales_orders'],
                 'currency' => 'THB',
                 'amounts_include_vat' => true,
                 'win_rate_excludes_open' => true,
+                'sales_order_amounts_exclude_cancelled' => true,
             ],
         ]);
     }

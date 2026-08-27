@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Actions\ConvertQuotationToSalesOrder;
 use App\Enums\QuotationStatus;
 use App\Enums\SettingKey;
 use App\Http\Controllers\Concerns\ProvidesQuotationFormData;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ConvertQuotationRequest;
 use App\Http\Requests\QuotationDecisionRequest;
 use App\Http\Requests\QuotationRequest;
 use App\Http\Requests\QuotationSendRequest;
 use App\Mail\QuotationMail;
 use App\Models\Quotation;
 use App\Models\User;
+use App\Models\Warehouse;
 use App\Services\QuotationPdfService;
 use App\Services\QuotationService;
 use App\Services\SettingService;
@@ -86,12 +89,14 @@ class QuotationController extends Controller
     {
         $this->authorize('view', $quotation);
 
-        $quotation->load(['items.product.stockLevels', 'customer', 'contact', 'site', 'salesUser', 'creator', 'approver', 'parent', 'revisions']);
+        $quotation->load(['items.product.stockLevels', 'customer', 'contact', 'site', 'salesUser', 'creator', 'approver', 'parent', 'revisions', 'salesOrder']);
 
         return view('quotations.show', [
             'quotation' => $quotation,
             'approvalReasons' => $this->quotations->approvalReasons($quotation),
             'minMargin' => $this->settings->decimal(SettingKey::ApprovalMinMarginPercent),
+            // ใช้ในกล่องสร้างใบสั่งขาย — ต้องเลือกคลังที่จะจองของ (ADR-017)
+            'warehouses' => Warehouse::query()->active()->orderBy('code')->get(),
         ]);
     }
 
@@ -218,6 +223,35 @@ class QuotationController extends Controller
             ->route('quotations.edit', $revision)
             ->with('success', __('สร้างฉบับแก้ไข :no แล้ว — ใบเดิมถูกเก็บไว้เป็นประวัติ', [
                 'no' => $revision->displayNo(),
+            ]));
+    }
+
+    /**
+     * แปลงเป็นใบสั่งขาย — ทำได้ครั้งเดียวต่อใบ (spec 4.3)
+     */
+    public function convertToSalesOrder(
+        ConvertQuotationRequest $request,
+        Quotation $quotation,
+        ConvertQuotationToSalesOrder $convert,
+    ): RedirectResponse {
+        $data = $request->validated();
+
+        if ($request->hasFile('customer_po_file')) {
+            // ตั้งชื่อสุ่มและเก็บใน storage/app/private (spec 8)
+            $data['customer_po_file'] = $request->file('customer_po_file')->store('customer-po', 'private');
+        }
+
+        $order = $convert->handle($quotation, $data);
+
+        if (isset($data['customer_po_file'])) {
+            $order->update(['customer_po_file' => $data['customer_po_file']]);
+        }
+
+        return redirect()
+            ->route('sales-orders.show', $order)
+            ->with('success', __('สร้างใบสั่งขาย :no จากใบเสนอราคา :quote แล้ว — กดยืนยันเพื่อจองของ', [
+                'no' => $order->so_no,
+                'quote' => $quotation->displayNo(),
             ]));
     }
 

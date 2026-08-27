@@ -28,13 +28,22 @@ if (Get-Process mariadbd -ErrorAction SilentlyContinue) {
 
 Start-Process -FilePath "$MariaBin\mariadbd.exe" -ArgumentList "--defaults-file=`"$MyIni`"" -WindowStyle Hidden
 
+# The first few pings are expected to fail while the server is still booting.
+# ErrorActionPreference must be relaxed here: Windows PowerShell 5.1 turns a
+# native command's stderr into a terminating error under 'Stop', which would
+# abort the whole script on that first attempt even though the server is fine.
+$ErrorActionPreference = 'Continue'
+
 for ($i = 1; $i -le 30; $i++) {
     Start-Sleep -Milliseconds 500
-    & "$MariaBin\mariadb-admin.exe" --defaults-file="$MyIni" -h 127.0.0.1 -u root -ptexson_dev_2026 ping *> $null
+
+    & "$MariaBin\mariadb-admin.exe" --defaults-file="$MyIni" -h 127.0.0.1 -u root -ptexson_dev_2026 ping 2>&1 | Out-Null
+
     if ($LASTEXITCODE -eq 0) {
         Write-Host 'MariaDB is ready on 127.0.0.1:3306' -ForegroundColor Green
         exit 0
     }
 }
 
-throw "MariaDB failed to start - check the log at $DataRoot\error.log"
+Write-Host "MariaDB failed to start - check the log at $DataRoot\error.log" -ForegroundColor Red
+exit 1

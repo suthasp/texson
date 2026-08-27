@@ -6,12 +6,14 @@ namespace App\Http\Controllers\Web;
 
 use App\Enums\PermissionName;
 use App\Enums\QuotationStatus;
+use App\Enums\SalesOrderStatus;
 use App\Enums\StockDocumentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\GoodsReceipt;
 use App\Models\Product;
 use App\Models\Quotation;
+use App\Models\SalesOrder;
 use App\Models\SerialNumber;
 use App\Models\StockAdjustment;
 use App\Models\StockLevel;
@@ -33,6 +35,7 @@ class DashboardController extends Controller
         $user = $request->user();
         $canSeeStock = $user->can('viewAny', StockLevel::class);
         $canSeeQuotations = $user->can('viewAny', Quotation::class);
+        $canSeeOrders = $user->can('viewAny', SalesOrder::class);
 
         // ใบที่ผู้ใช้คนนี้มีสิทธิ์เห็น — sales เห็นเฉพาะของตัวเอง (spec 8)
         $visibleQuotations = fn () => Quotation::query()->visibleTo($user);
@@ -77,6 +80,21 @@ class DashboardController extends Controller
                 : collect(),
             'expiringQuotations' => $canSeeQuotations
                 ? $visibleQuotations()->expiringWithin(7)->with('customer:id,name_th')->orderBy('valid_until')->limit(5)->get()
+                : collect(),
+            'canSeeOrders' => $canSeeOrders,
+            'orderStats' => $canSeeOrders ? [
+                'open' => SalesOrder::query()->visibleTo($user)->open()->count(),
+                'pending' => SalesOrder::query()->visibleTo($user)->where('status', SalesOrderStatus::Pending)->count(),
+            ] : [],
+            // ใบที่ยืนยันแล้วและยังมีของค้างส่ง — คิวงานของฝ่ายคลัง
+            'ordersToShip' => $canSeeOrders
+                ? SalesOrder::query()
+                    ->visibleTo($user)
+                    ->whereIn('status', [SalesOrderStatus::Reserved, SalesOrderStatus::PartiallyDelivered])
+                    ->with(['customer:id,name_th', 'warehouse:id,code', 'items'])
+                    ->orderByRaw('required_date is null, required_date')
+                    ->limit(5)
+                    ->get()
                 : collect(),
             'recentProducts' => Product::query()->with(['category', 'brand'])->latest()->limit(5)->get(),
             'recentCustomers' => Customer::query()->latest()->limit(5)->get(),

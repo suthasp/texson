@@ -7,8 +7,10 @@ namespace App\Services;
 use App\Enums\SerialStatus;
 use App\Exceptions\Domain\SerialNumberMismatchException;
 use App\Models\Product;
+use App\Models\SalesOrder;
 use App\Models\SerialNumber;
 use App\Models\Warehouse;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -126,6 +128,127 @@ class SerialNumberService
 
                 $serial->update(['warehouse_id' => $to->id]);
             }
+        });
+    }
+
+    /**
+     * ตรวจ serial ก่อน post ใบส่งของ (spec 4.4)
+     *
+     * สินค้าที่ติดตาม serial ต้องเลือก serial ที่พร้อมจ่ายให้ครบจำนวนพอดี
+     * ตรวจให้จบก่อนแตะสต็อก เพื่อไม่ให้ส่งไปครึ่งใบแล้วค้าง
+     *
+     * @param  array<int, string>  $serials
+     *
+     * @throws SerialNumberMismatchException เมื่อจำนวน serial ไม่ตรงกับจำนวนที่ส่ง
+     * @throws ValidationException เมื่อ serial ไม่พร้อมจ่ายจากคลังนี้
+     */
+    public function validateForDelivery(Product $product, Warehouse $warehouse, string $qty, array $serials): void
+    {
+        if (! $product->is_serialized) {
+            return;
+        }
+
+        $serials = $this->normalize($serials);
+
+        if (bccomp((string) count($serials), $qty, 3) !== 0) {
+            throw new SerialNumberMismatchException($product->sku, $qty, count($serials));
+        }
+
+        $duplicates = array_diff_assoc($serials, array_unique($serials));
+
+        if ($duplicates !== []) {
+            throw ValidationException::withMessages([
+                'items' => __('Serial ซ้ำกันในใบเดียวกัน: :serials', ['serials' => implode(', ', array_unique($duplicates))]),
+            ]);
+        }
+
+        /** @var array<string, SerialNumber> $found */
+        $found = SerialNumber::query()
+            ->where('product_id', $product->id)
+            ->whereIn('serial_no', $serials)
+            ->get()
+            ->keyBy('serial_no')
+            ->all();
+
+        foreach ($serials as $serialNo) {
+            $serial = $found[$serialNo] ?? null;
+
+            if ($serial === null) {
+                throw ValidationException::withMessages([
+                    'items' => __('ไม่พบ Serial :serial ของสินค้า :sku ในระบบ', [
+                        'serial' => $serialNo,
+                        'sku' => $product->sku,
+                    ]),
+                ]);
+            }
+
+            if ($serial->warehouse_id !== $warehouse->id) {
+                throw ValidationException::withMessages([
+                    'items' => __('Serial :serial ไม่ได้อยู่ในคลัง :warehouse', [
+                        'serial' => $serialNo,
+                        'warehouse' => $warehouse->code,
+                    ]),
+                ]);
+            }
+
+            if (! $serial->status->countsAsOnHand()) {
+                throw ValidationException::withMessages([
+                    'items' => __('Serial :serial อยู่ในสถานะ :status จ่ายออกไม่ได้', [
+                        'serial' => $serialNo,
+                        'status' => $serial->status->label(),
+                    ]),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * เปลี่ยน serial เป็นขายแล้วตอน post ใบส่งของ พร้อมตั้งช่วงรับประกัน (spec 4.4)
+     *
+     * warranty_start = วันที่ส่งของ · warranty_end = +warranty_months ของสินค้า
+     * ผูกลูกค้าและหน้างานไว้ด้วย เพื่อให้งาน PM ใน Phase 2 ของโรดแมปตามของชิ้นนี้เจอ
+     *
+     * @param  array<int, string>  $serials
+     * @return array<int, SerialNumber>
+     */
+    public function markSoldOnDelivery(
+        Product $product,
+        array $serials,
+        SalesOrder $order,
+        Carbon $deliveredAt,
+    ): array {
+        if (! $product->is_serialized || $serials === []) {
+            return [];
+        }
+
+        return DB::transaction(function () use ($product, $serials, $order, $deliveredAt): array {
+            $sold = [];
+
+            $warrantyEnd = $product->warranty_months > 0
+                ? $deliveredAt->copy()->addMonths($product->warranty_months)
+                : null;
+
+            foreach ($this->normalize($serials) as $serialNo) {
+                $serial = SerialNumber::query()
+                    ->where('product_id', $product->id)
+                    ->where('serial_no', $serialNo)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                $serial->transitionTo(SerialStatus::Sold, [
+                    'customer_id' => $order->customer_id,
+                    'customer_site_id' => $order->customer_site_id,
+                    'sales_order_id' => $order->id,
+                    'warranty_start' => $deliveredAt->toDateString(),
+                    'warranty_end' => $warrantyEnd?->toDateString(),
+                    // ของออกจากคลังไปอยู่กับลูกค้าแล้ว จึงไม่ผูกกับคลังใดอีก
+                    'warehouse_id' => null,
+                ]);
+
+                $sold[] = $serial->refresh();
+            }
+
+            return $sold;
         });
     }
 

@@ -31,6 +31,16 @@
             ];
         }
 
+        if ($canSeeOrders) {
+            $tiles[] = [
+                'label' => __('ใบสั่งขายที่ยังไม่ปิด'),
+                'value' => $orderStats['open'],
+                'route' => 'sales-orders.index',
+                'params' => ['open' => 1],
+                'icon' => 'clipboard',
+            ];
+        }
+
         if ($canSeeStock) {
             $tiles[] = ['label' => __('สินค้าเหลือน้อย'), 'value' => $lowStockCount, 'route' => 'stock.index', 'icon' => 'stack', 'alert' => $lowStockCount > 0];
             $tiles[] = ['label' => __('ประกันหมดใน 90 วัน'), 'value' => $warrantyExpiring, 'route' => 'serial-numbers.index', 'icon' => 'badge'];
@@ -111,6 +121,45 @@
                 </x-card>
             @endif
         </div>
+    @endif
+
+    @if ($ordersToShip->isNotEmpty())
+        <x-card class="mt-6" :padded="false">
+            <x-slot name="header">
+                <div>
+                    <h2 class="text-sm font-semibold text-navy-900">{{ __('ใบสั่งขายที่รอส่งของ') }}</h2>
+                    <p class="text-xs text-gray-500">{{ __('เรียงตามวันที่ลูกค้าต้องการรับของ') }}</p>
+                </div>
+                <a href="{{ route('sales-orders.index', ['open' => 1]) }}" class="text-xs font-medium text-aqua-600 hover:text-aqua-700">
+                    {{ __('ดูทั้งหมด') }}
+                </a>
+            </x-slot>
+
+            @foreach ($ordersToShip as $order)
+                <div class="flex flex-wrap items-center justify-between gap-3 border-b border-gray-50 px-5 py-3 text-sm last:border-0">
+                    <div class="min-w-0">
+                        <a href="{{ route('sales-orders.show', $order) }}" class="tabular font-medium text-navy-900 hover:text-aqua-600">
+                            {{ $order->so_no }}
+                        </a>
+                        <p class="truncate text-xs text-gray-500">
+                            {{ $order->customer->name_th }} · {{ $order->warehouse->code }}
+                            @if ($order->required_date)
+                                · {{ __('ต้องการ :date', ['date' => $order->required_date->translatedFormat('d M Y')]) }}
+                            @endif
+                        </p>
+                    </div>
+
+                    <div class="flex shrink-0 items-center gap-2">
+                        @if ($order->hasShortage())
+                            <x-badge color="amber">{{ __('ของขาด :qty', ['qty' => rtrim(rtrim($order->shortageQty(), '0'), '.')]) }}</x-badge>
+                        @endif
+                        <x-badge :color="$order->status->badgeColor()">
+                            {{ __('ส่งแล้ว :percent%', ['percent' => number_format((float) $order->deliveryProgressPercent(), 0)]) }}
+                        </x-badge>
+                    </div>
+                </div>
+            @endforeach
+        </x-card>
     @endif
 
     @if ($canSeeStock && array_sum($draftDocuments) > 0)

@@ -116,6 +116,26 @@ enum PermissionName: string
     /** สร้าง revision ใหม่จากใบที่ส่งไปแล้ว */
     case QuotationRevise = 'quotation.revise';
 
+    // ── ใบสั่งขาย ──
+    case SalesOrderViewAny = 'sales_order.viewAny';
+    case SalesOrderView = 'sales_order.view';
+    case SalesOrderCreate = 'sales_order.create';
+    case SalesOrderUpdate = 'sales_order.update';
+    case SalesOrderDelete = 'sales_order.delete';
+    /** ยืนยันใบแล้วจองของในคลัง (spec 4.4) — แยกจากสิทธิ์แก้ไขเพราะไปกันสต็อกของคนอื่น */
+    case SalesOrderConfirm = 'sales_order.confirm';
+    /** ยกเลิกใบและคืนของที่จองไว้ */
+    case SalesOrderCancel = 'sales_order.cancel';
+
+    // ── ใบส่งของ ──
+    case DeliveryViewAny = 'delivery.viewAny';
+    case DeliveryView = 'delivery.view';
+    case DeliveryCreate = 'delivery.create';
+    case DeliveryUpdate = 'delivery.update';
+    /** ตัดสต็อกจริงตามใบส่งของ — ย้อนกลับไม่ได้ */
+    case DeliveryPost = 'delivery.post';
+    case DeliveryDelete = 'delivery.delete';
+
     // ── ตั้งค่าระบบ (ข้อมูลบริษัท เงื่อนไขเอกสาร เกณฑ์อนุมัติ) ──
     case SettingViewAny = 'setting.viewAny';
     case SettingUpdate = 'setting.update';

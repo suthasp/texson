@@ -3,6 +3,7 @@
 ระบบหลังบ้านสำหรับ **TEXSON** — ที่ปรึกษา Data Center Facility (Audit / PM / CM / Training) และจำหน่ายอุปกรณ์–อะไหล่ (UPS, แบตเตอรี่, CRAC/Precision Air, Rack, PDU, ATS/Generator, Monitoring, Fire Suppression)
 
 **Phase 1 (ปัจจุบัน):** Spare Part Inventory + Quotation/Sales — ใช้งานภายในองค์กร
+สายงานเต็มเส้น: ใบเสนอราคา → ใบสั่งขาย → ใบส่งของ → ตัดสต็อก พร้อม serial และ backorder
 **Phase 2 (อนาคต):** Work Order PM/CM, Asset Register, Contract/SLA — ดู [docs/PHASE2-NOTES.md](docs/PHASE2-NOTES.md)
 
 สเปกฉบับเต็มอยู่ที่ [CLAUDE.md](CLAUDE.md) · ERD อยู่ที่ [docs/ERD.md](docs/ERD.md) · REST API อยู่ที่ [docs/API.md](docs/API.md)
@@ -75,8 +76,8 @@ php artisan serve
 |---|---|---|
 | `admin@texson.local` | ผู้ดูแลระบบ | ทุกอย่าง รวมถึงจัดการผู้ใช้ ตั้งค่าระบบ และลบถาวรตาม PDPA |
 | `manager@texson.local` | ผู้จัดการฝ่ายขาย | งานขายทั้งหมด · **อนุมัติใบเสนอราคา** · เห็นใบของ sales ทุกคน |
-| `sales1@texson.local` | ฝ่ายขาย | ลูกค้าแบบเต็ม · ใบเสนอราคาเฉพาะของตัวเอง · เห็นราคาทุนเพื่อคุม margin ([ADR-012](docs/DECISIONS.md)) |
-| `warehouse@texson.local` | คลังสินค้า | สินค้า ผู้ขาย หมวดหมู่ ยี่ห้อ คลัง · เอกสารคลังทั้งหมดและ ledger |
+| `sales1@texson.local` | ฝ่ายขาย | ลูกค้าแบบเต็ม · ใบเสนอราคาและใบสั่งขายเฉพาะของตัวเอง · เห็นราคาทุนเพื่อคุม margin ([ADR-012](docs/DECISIONS.md)) |
+| `warehouse@texson.local` | คลังสินค้า | สินค้า ผู้ขาย หมวดหมู่ ยี่ห้อ คลัง · เอกสารคลังและ ledger · **ออกและตัดสต็อกใบส่งของ** |
 | `engineer@texson.local` | วิศวกร | ดูสินค้า ลูกค้า ยอดคงเหลือ และ ledger เพื่อเตรียมงานหน้างาน |
 | `viewer@texson.local` | ผู้ดูอย่างเดียว | อ่านได้ทุกหน้าที่ได้รับสิทธิ์ แก้ไม่ได้เลย |
 
@@ -134,8 +135,8 @@ app/
 | 1 | Master data: users/roles, customers+contacts+sites, categories, brands, suppliers, warehouses, products | ✅ เสร็จ |
 | 2 | Inventory: stock levels, ledger, รับเข้า, ปรับปรุง, โอนคลัง, serial, low-stock | ✅ เสร็จ |
 | 3 | Quotation: CRUD, คำนวณ, lifecycle, revision, อนุมัติ, PDF ไทย/อังกฤษ, ส่งเมล | ✅ เสร็จ |
-| — | REST API v1 (สเปกข้อ 6) — สินค้า ลูกค้า สต็อก ใบเสนอราคา รายงาน | ✅ เสร็จ |
-| 4 | Sales Order → Delivery → ตัดสต็อก + serial + backorder | ⬜ |
+| — | REST API v1 (สเปกข้อ 6) — ครบทุก endpoint | ✅ เสร็จ |
+| 4 | Sales Order → Delivery → ตัดสต็อก + serial + backorder | ✅ เสร็จ |
 | 5 | Dashboard + รายงาน + Excel export | ⬜ |
 | 6 | Hardening + `docs/SECURITY.md` + คู่มือผู้ใช้ | ⬜ |
 

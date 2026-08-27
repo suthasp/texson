@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\AuthController;
 use App\Http\Controllers\Api\V1\CustomerController;
+use App\Http\Controllers\Api\V1\DeliveryController;
 use App\Http\Controllers\Api\V1\ProductController;
 use App\Http\Controllers\Api\V1\QuotationController;
 use App\Http\Controllers\Api\V1\ReportController;
+use App\Http\Controllers\Api\V1\SalesOrderController;
 use App\Http\Controllers\Api\V1\StockController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,8 +20,6 @@ use Illuminate\Support\Facades\Route;
 | ยืนยันตัวตนด้วย Sanctum token · rate limit 60 ครั้ง/นาที
 | ทุก response ผ่าน API Resource และมีรูป {"data": ..., "meta": ...}
 |
-| endpoint ของใบสั่งขายและใบส่งของ (convert-to-so, sales-orders, deliveries)
-| ยังไม่เปิดเพราะตารางอยู่ใน Phase 4 — ดู docs/API.md
 |
 */
 
@@ -60,9 +60,26 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
             Route::post('{quotation}/reject', 'reject')->name('reject');
             Route::post('{quotation}/cancel', 'cancel')->name('cancel');
             Route::post('{quotation}/revise', 'revise')->name('revise');
+            Route::post('{quotation}/convert-to-so', 'convertToSalesOrder')->name('convert');
         });
 
         Route::apiResource('quotations', QuotationController::class);
+
+        // ── ใบสั่งขาย ──
+        // ไม่มี store/update ของรายการ — ใบเกิดจากการแปลงใบเสนอราคาเท่านั้น (spec 4.3)
+        Route::prefix('sales-orders')->name('sales-orders.')->group(function (): void {
+            Route::post('{sales_order}/confirm', [SalesOrderController::class, 'confirm'])->name('confirm');
+            Route::post('{sales_order}/cancel', [SalesOrderController::class, 'cancel'])->name('cancel');
+            Route::get('{sales_order}/outstanding', [DeliveryController::class, 'outstanding'])->name('outstanding');
+            Route::post('{sales_order}/deliveries', [DeliveryController::class, 'store'])->name('deliveries.store');
+        });
+
+        Route::get('sales-orders', [SalesOrderController::class, 'index'])->name('sales-orders.index');
+        Route::get('sales-orders/{sales_order}', [SalesOrderController::class, 'show'])->name('sales-orders.show');
+
+        // ── ใบส่งของ ──
+        Route::post('deliveries/{delivery}/post', [DeliveryController::class, 'post'])->name('deliveries.post');
+        Route::apiResource('deliveries', DeliveryController::class)->except(['store']);
 
         // ── รายงาน ──
         Route::get('reports/low-stock', [ReportController::class, 'lowStock'])->name('reports.low-stock');

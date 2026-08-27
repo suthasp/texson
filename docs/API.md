@@ -290,16 +290,145 @@ curl http://localhost:8000/api/v1/products \
 
 ---
 
-## 6. ยังไม่เปิด — รอ Phase 4
+## 6. ใบสั่งขาย
 
-endpoint เหล่านี้อยู่ใน [CLAUDE.md ข้อ 6](../CLAUDE.md) แต่ต้องรอตาราง `sales_orders` / `deliveries` ที่จะสร้างใน Phase 4
+| Method | Path | สิทธิ์ |
+|---|---|---|
+| `POST` | `/quotations/{id}/convert-to-so` | `sales_order.create` |
+| `GET` | `/sales-orders` | `sales_order.viewAny` |
+| `GET` | `/sales-orders/{id}` | `sales_order.view` |
+| `POST` | `/sales-orders/{id}/confirm` | `sales_order.confirm` |
+| `POST` | `/sales-orders/{id}/cancel` | `sales_order.cancel` |
+| `GET` | `/sales-orders/{id}/outstanding` | `sales_order.view` |
 
+**Query ของ `/sales-orders`:** `search` `status` `customer_id` `warehouse_id` `from` `to` `open=1` `per_page`
+
+### แปลงใบเสนอราคา
+
+`POST /quotations/{id}/convert-to-so` ตอบ `201` พร้อมใบสั่งขายใบใหม่
+
+```json
+{
+  "warehouse_id": 1,
+  "order_date": "2026-08-27",
+  "required_date": "2026-09-10",
+  "customer_po_no": "PO-2026-0099"
+}
 ```
-POST   /api/v1/quotations/{id}/convert-to-so
-GET    /api/v1/sales-orders
-GET    /api/v1/sales-orders/{id}
-POST   /api/v1/sales-orders/{id}/deliveries
-POST   /api/v1/deliveries/{id}/post
+
+รายการและราคายกมาจากใบเสนอราคาทั้งชุด ส่งมาที่นี่ไม่ได้ ([ADR-019](DECISIONS.md))
+`warehouse_id` ไม่ระบุ = คลังเริ่มต้นของระบบ ([ADR-017](DECISIONS.md))
+
+| กรณี | ผลลัพธ์ |
+|---|---|
+| ใบยังไม่ `accepted` | `409` + `{"document","from","to"}` |
+| ใบถูกแปลงไปแล้ว | `409` + `{"quotation_no","sales_order_id","sales_order_no"}` |
+
+### ยืนยันใบ → จองของ
+
+`POST /sales-orders/{id}/confirm` เปลี่ยน `pending` → `reserved` แล้วจองของในคลังของใบ ([ADR-018](DECISIONS.md))
+
+ของไม่พอ **ไม่ถือว่าผิด** — จองเท่าที่มีแล้วรายงานส่วนที่ขาด (backorder ตาม [CLAUDE.md ข้อ 4.4](../CLAUDE.md))
+
+```json
+{
+  "data": {
+    "status": { "value": "reserved" },
+    "items": [{ "qty_ordered": "10.000", "qty_reserved": "3.000", "qty_shortage": "7.000" }],
+    "fulfilment": { "has_shortage": true, "shortage_qty": "7.000", "progress_percent": "0.00" }
+  },
+  "meta": { "reserved_in_full": false, "shortage_qty": "7.000" }
+}
 ```
 
-เรียกตอนนี้จะได้ `404` เหมือน endpoint ที่ไม่มีอยู่จริง
+`POST /sales-orders/{id}/cancel` รับ `reason` (ไม่บังคับ) และ **คืนของที่ยังจองค้างอยู่ทั้งหมด**
+ของที่ส่งออกไปแล้วไม่ถูกดึงกลับ
+
+---
+
+## 7. ใบส่งของ
+
+| Method | Path | สิทธิ์ |
+|---|---|---|
+| `POST` | `/sales-orders/{id}/deliveries` | `delivery.create` |
+| `GET` | `/deliveries` | `delivery.viewAny` |
+| `GET` | `/deliveries/{id}` | `delivery.view` |
+| `PUT` | `/deliveries/{id}` | `delivery.update` — เฉพาะ draft |
+| `POST` | `/deliveries/{id}/post` | `delivery.post` |
+| `DELETE` | `/deliveries/{id}` | `delivery.delete` — เฉพาะ draft |
+
+**Query ของ `/deliveries`:** `search` `status` `sales_order_id` `warehouse_id` `from` `to` `per_page`
+
+### ดูของที่ยังค้างส่งก่อน
+
+`GET /sales-orders/{id}/outstanding` คืนบรรทัดที่ยังส่งไม่ครบ พร้อมจำนวนที่เหลือและธง `is_serialized`
+
+```json
+{
+  "data": [
+    {
+      "sales_order_item_id": 12, "product_id": 5, "sku": "UPS-APC-SRT10K",
+      "description": "UPS 10 kVA", "uom": "ชุด", "is_serialized": true,
+      "qty_ordered": "4.000", "qty_delivered": "0.000", "qty": "4.000"
+    }
+  ],
+  "meta": { "sales_order_no": "SO-202608-0001", "status": "reserved", "can_deliver": true }
+}
+```
+
+### สร้างใบส่งของ
+
+`POST /sales-orders/{id}/deliveries` ตอบ `201` — ยังเป็นร่าง ยังไม่ตัดสต็อก
+
+```json
+{
+  "warehouse_id": 1,
+  "delivery_date": "2026-08-27",
+  "receiver_name": "คุณสมชาย",
+  "vehicle_note": "ทะเบียน 1กก-1234",
+  "items": [
+    { "sales_order_item_id": 12, "qty": "4", "lot_no": null, "serial_numbers": "SN-A1\nSN-A2\nSN-A3\nSN-A4" }
+  ]
+}
+```
+
+- `sales_order_item_id` ต้องเป็นบรรทัดของใบสั่งขายใบนั้น ไม่งั้น `422`
+- ใบสั่งขายที่ยังไม่ยืนยัน → `409`
+- `serial_numbers` รับได้ทั้ง array และข้อความหลายบรรทัด
+
+### ตัดสต็อกจริง
+
+`POST /deliveries/{id}/post` — ย้อนกลับไม่ได้ ทำสามอย่างในทรานแซกชันเดียว
+
+1. `qty_on_hand` ลด และเขียน ledger `type=issue` ที่ชี้กลับมายังใบส่งของ
+2. `qty_reserved` ลดตามจำนวนที่ส่งจริง
+3. serial ที่จ่ายออกไปเปลี่ยนเป็น `sold` พร้อมตั้ง `warranty_start` = วันที่ส่ง และ `warranty_end` = +`warranty_months`
+
+```json
+{
+  "data": {
+    "status": { "value": "posted" },
+    "movements": [{ "qty": "-4.000", "balance_after": "46.000", "type": { "value": "issue" } }]
+  },
+  "meta": { "sales_order_status": "delivered" }
+}
+```
+
+| กรณี | ผลลัพธ์ |
+|---|---|
+| ของในคลังไม่พอ | `422` + `shortages[]` |
+| serial ไม่ครบจำนวน / ไม่ได้อยู่ในคลังนั้น | `422` |
+| ส่งเกินยอดที่ยังค้าง | `422` |
+| post ซ้ำ | `409` |
+
+ทุกกรณีที่ล้มเหลว **ไม่แตะสต็อกเลยแม้แต่บรรทัดเดียว** — ตรวจทุกบรรทัดจบก่อนจึงเริ่มเขียน
+
+สถานะใบสั่งขายถูกคำนวณใหม่หลัง post เสมอ: `reserved` → `partially_delivered` → `delivered`
+
+> บรรทัดค่าแรงและค่าบริการ (`product_id` เป็น null) ส่งมอบได้ตามปกติแต่ไม่แตะสต็อกและไม่เขียน ledger ([ADR-020](DECISIONS.md))
+
+---
+
+## 8. ยังไม่เปิด
+
+ทุก endpoint ใน [CLAUDE.md ข้อ 6](../CLAUDE.md) เปิดใช้งานครบแล้ว

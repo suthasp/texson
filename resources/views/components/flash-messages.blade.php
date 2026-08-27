@@ -1,12 +1,15 @@
 @php
     $messages = array_filter([
         'success' => session('success'),
+        // ทำสำเร็จแต่มีเรื่องต้องรู้ เช่น จองของได้ไม่ครบแล้วกลายเป็น backorder
+        'warning' => session('warning'),
         'error' => session('error'),
         'status' => session('status'),
     ]);
 
     $styles = [
         'success' => 'border-emerald-200 bg-emerald-50 text-emerald-800',
+        'warning' => 'border-amber-200 bg-amber-50 text-amber-900',
         'error' => 'border-rose-200 bg-rose-50 text-rose-800',
         'status' => 'border-aqua-200 bg-aqua-50 text-aqua-800',
     ];

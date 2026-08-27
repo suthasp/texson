@@ -48,10 +48,17 @@ class QuotationSeeder extends Seeder
         $sent = $service->createDraft($this->payload($customers[1 % $customers->count()], $products->slice(3, 2)));
         $this->send($sent, $sales, $manager);
 
-        // 3. ใบที่ลูกค้าตอบรับ — พร้อมให้ Phase 4 แปลงเป็นใบสั่งขาย
-        $accepted = $service->createDraft($this->payload($customers[2 % $customers->count()], $products->slice(5, 2)));
-        $this->send($accepted, $sales, $manager);
-        $service->accept($accepted);
+        // 3. ใบที่ลูกค้าตอบรับ — SalesOrderSeeder แปลงใบเหล่านี้เป็นใบสั่งขายต่อ
+        //    ทำสามใบเพื่อให้เห็นใบสั่งขายครบทุกสถานะบนเครื่องพัฒนา
+        foreach (range(0, 2) as $index) {
+            $accepted = $service->createDraft($this->payload(
+                $customers[$index % $customers->count()],
+                $products->slice(5 + $index, 2),
+            ));
+
+            $this->send($accepted, $sales, $manager);
+            $service->accept($accepted);
+        }
 
         // 4. ใบที่เข้าเกณฑ์ต้องอนุมัติ (ส่วนลด 25% เกินเกณฑ์ 15%)
         $needsApproval = $service->createDraft($this->payload(

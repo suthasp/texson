@@ -9,9 +9,11 @@ use App\Http\Controllers\Web\CustomerContactController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\CustomerSiteController;
 use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\DeliveryController;
 use App\Http\Controllers\Web\GoodsReceiptController;
 use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\QuotationController;
+use App\Http\Controllers\Web\SalesOrderController;
 use App\Http\Controllers\Web\SerialNumberController;
 use App\Http\Controllers\Web\SettingController;
 use App\Http\Controllers\Web\StockAdjustmentController;
@@ -82,8 +84,30 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
         Route::post('{quotation}/reject', 'reject')->name('reject');
         Route::post('{quotation}/cancel', 'cancel')->name('cancel');
         Route::post('{quotation}/revise', 'revise')->name('revise');
+        Route::post('{quotation}/convert-to-so', 'convertToSalesOrder')->name('convert');
     });
     Route::resource('quotations', QuotationController::class);
+
+    // ── ใบสั่งขาย ──
+    // ไม่มี create/store เพราะใบสั่งขายเกิดจากการแปลงใบเสนอราคาเท่านั้น (spec 4.3)
+    Route::controller(SalesOrderController::class)->prefix('sales-orders')->name('sales-orders.')->group(function (): void {
+        Route::post('{sales_order}/confirm', 'confirm')->name('confirm');
+        Route::post('{sales_order}/cancel', 'cancel')->name('cancel');
+        Route::get('{sales_order}/purchase-order-file', 'purchaseOrderFile')->name('po-file');
+    });
+    Route::resource('sales-orders', SalesOrderController::class)
+        ->only(['index', 'show', 'edit', 'update'])
+        ->parameters(['sales-orders' => 'sales_order']);
+
+    // ── ใบส่งของ ──
+    // เปิดจากใบสั่งขายเสมอ จึงซ้อนอยู่ใต้ sales-orders ตอนสร้าง
+    Route::get('sales-orders/{sales_order}/deliveries/create', [DeliveryController::class, 'create'])
+        ->name('sales-orders.deliveries.create');
+    Route::post('sales-orders/{sales_order}/deliveries', [DeliveryController::class, 'store'])
+        ->name('sales-orders.deliveries.store');
+
+    Route::post('deliveries/{delivery}/post', [DeliveryController::class, 'post'])->name('deliveries.post');
+    Route::resource('deliveries', DeliveryController::class)->except(['create', 'store']);
 
     // ── ผู้ใช้งานระบบ ──
     Route::resource('users', UserController::class)->except(['show']);
