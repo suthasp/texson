@@ -51,10 +51,20 @@ class RolePermissionSeeder extends Seeder
             [PermissionName::CustomerForceDelete->value],
         ));
 
+        // งานใบเสนอราคาของฝ่ายขาย — ทำได้ทุกอย่างยกเว้น "อนุมัติ" ซึ่งสงวนให้ผู้จัดการ (spec 4.3)
+        $quotationWithoutApprove = array_values(array_diff(
+            PermissionName::forResource('quotation'),
+            [PermissionName::QuotationApprove->value],
+        ));
+
         $salesCore = [
             ...$customerWithoutForceDelete,
             ...PermissionName::readOnlyForResource('product'),
             ...PermissionName::readOnlyForResource('supplier'),
+            ...$quotationWithoutApprove,
+            // ฝ่ายขายต้องเห็นราคาทุนตั้งแต่ Phase 3 (ADR-012) — สเปกข้อ 4.5 บังคับให้
+            // margin ขึ้นสดบนหน้าจอตอนออกใบ ซึ่งเป็นหน้าจอของฝ่ายขายเอง
+            PermissionName::ProductViewCost->value,
             PermissionName::CategoryViewAny->value,
             PermissionName::BrandViewAny->value,
             // ฝ่ายขายต้องเห็นยอดคงเหลือตอนออกใบเสนอราคา แต่ไม่ได้แตะเอกสารคลัง
@@ -78,9 +88,11 @@ class RolePermissionSeeder extends Seeder
             // ผู้จัดการฝ่ายขาย: งานขายทั้งหมด + เห็นราคาทุนเพื่อตรวจ margin ก่อนอนุมัติ
             RoleName::SalesManager->value => [
                 ...$salesCore,
-                PermissionName::ProductViewCost->value,
+                PermissionName::QuotationApprove->value,
                 PermissionName::StockViewLedger->value,
                 PermissionName::ActivityViewAny->value,
+                // ดูเกณฑ์อนุมัติและเงื่อนไขเอกสารได้ แต่แก้ไม่ได้ — ไม่งั้นเท่ากับข้ามการอนุมัติเอง
+                PermissionName::SettingViewAny->value,
             ],
 
             RoleName::Sales->value => $salesCore,

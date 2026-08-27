@@ -26,3 +26,7 @@ yarn-error.log
 /storage/app/private/*
 !/storage/app/private/.gitkeep
 /.laravel-tmp
+
+# dompdf เขียนไฟล์ .ufm/.php ที่แคชไว้ลงที่นี่ — ฟอนต์ตัวจริงอยู่ใน resources/fonts
+/storage/fonts/*
+!/storage/fonts/.gitkeep

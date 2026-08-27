@@ -40,6 +40,18 @@ return [
             'report' => false,
         ],
 
+        /*
+         * ไฟล์แนบทั้งหมด (โลโก้ ลายเซ็น เอกสารลูกค้า) อยู่ที่นี่ตาม spec ข้อ 8
+         * เข้าถึงผ่าน controller ที่ตรวจสิทธิ์เท่านั้น ห้าม symlink ออก public
+         */
+        'private' => [
+            'driver' => 'local',
+            'root' => storage_path('app/private'),
+            'serve' => false,
+            'throw' => false,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

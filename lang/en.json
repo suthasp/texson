@@ -1,0 +1,53 @@
+{
+    "ใบเสนอราคา": "Quotation",
+    "เลขที่": "No.",
+    "วันที่": "Date",
+    "ยืนราคาถึง": "Valid until",
+    "ฉบับแก้ไขครั้งที่": "Revision",
+    "เรียน": "To",
+    "ผู้ติดต่อ": "Contact",
+    "หน้างาน": "Site",
+    "เลขประจำตัวผู้เสียภาษี": "Tax ID",
+    "สำนักงานใหญ่": "Head Office",
+    "สาขา :code": "Branch :code",
+    "โทร": "Tel",
+    "หน้า": "Page ",
+
+    "ลำดับ": "No.",
+    "รหัส": "Code",
+    "รายละเอียด": "Description",
+    "จำนวน": "Qty",
+    "หน่วย": "Unit",
+    "ราคา/หน่วย": "Unit Price",
+    "ส่วนลด": "Discount",
+    "จำนวนเงิน": "Amount",
+    "ส่งของภายใน :days วัน": "Lead time :days days",
+
+    "รวมเป็นเงิน": "Subtotal",
+    "ส่วนลดท้ายบิล": "Discount",
+    "ยอดหลังหักส่วนลด": "After discount",
+    "ภาษีมูลค่าเพิ่ม :rate%": "VAT :rate%",
+    "ยอดสุทธิ": "Grand Total",
+    "จำนวนเงินรวมทั้งสิ้น": "Total amount",
+    "หมายเหตุ: รายการค่าบริการมูลค่า :base บาท เข้าข่ายหักภาษี ณ ที่จ่าย 3% เป็นเงิน :amount บาท (ไม่ได้หักจากยอดสุทธิข้างต้น)": "Note: service items totalling :base THB are subject to 3% withholding tax of :amount THB (not deducted from the grand total above).",
+
+    "เงื่อนไข": "Terms & Conditions",
+    "เงื่อนไขชำระเงิน": "Payment terms",
+    "เงื่อนไขส่งมอบ": "Delivery terms",
+    "ระยะเวลาส่งของ": "Lead time",
+    "ผู้เสนอราคา": "Prepared by",
+
+    "ผู้สั่งซื้อ / ผู้อนุมัติ": "Approved by (Customer)",
+
+    "ฉบับร่าง": "DRAFT",
+    "ถูกแทนที่แล้ว": "SUPERSEDED",
+    "ยกเลิกแล้ว": "CANCELLED",
+
+    "ใบเสนอราคา :no จาก :company": "Quotation :no from :company",
+    "ใบเสนอราคา :no": "Quotation :no",
+    "เรียน :name": "Dear :name",
+    "บริษัทขอส่งใบเสนอราคาตามรายละเอียดในไฟล์แนบ": "Please find our quotation attached.",
+    "รายการ": "Item",
+    "หากมีข้อสงสัยกรุณาติดต่อ :name โทร :phone": "For any questions please contact :name at :phone",
+    "ขอแสดงความนับถือ": "Best regards,"
+}

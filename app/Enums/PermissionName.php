@@ -99,6 +99,27 @@ enum PermissionName: string
     case SerialView = 'serial.view';
     case SerialUpdate = 'serial.update';
 
+    // ── ใบเสนอราคา ──
+    case QuotationViewAny = 'quotation.viewAny';
+    case QuotationView = 'quotation.view';
+    case QuotationCreate = 'quotation.create';
+    case QuotationUpdate = 'quotation.update';
+    case QuotationDelete = 'quotation.delete';
+    /** ส่งใบเข้าคิวรออนุมัติ */
+    case QuotationSubmit = 'quotation.submit';
+    /** อนุมัติใบที่เข้าเกณฑ์ส่วนลด/margin/ยอด (spec 4.3) — แยกจากสิทธิ์แก้ไขโดยเจตนา */
+    case QuotationApprove = 'quotation.approve';
+    /** ส่งใบให้ลูกค้า (อีเมล) และเปลี่ยนสถานะเป็น sent */
+    case QuotationSend = 'quotation.send';
+    /** บันทึกผลจากลูกค้า — ตอบรับหรือปฏิเสธ */
+    case QuotationDecide = 'quotation.decide';
+    /** สร้าง revision ใหม่จากใบที่ส่งไปแล้ว */
+    case QuotationRevise = 'quotation.revise';
+
+    // ── ตั้งค่าระบบ (ข้อมูลบริษัท เงื่อนไขเอกสาร เกณฑ์อนุมัติ) ──
+    case SettingViewAny = 'setting.viewAny';
+    case SettingUpdate = 'setting.update';
+
     // ── ประวัติการใช้งาน ──
     case ActivityViewAny = 'activity.viewAny';
 

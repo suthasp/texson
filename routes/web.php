@@ -11,7 +11,9 @@ use App\Http\Controllers\Web\CustomerSiteController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\GoodsReceiptController;
 use App\Http\Controllers\Web\ProductController;
+use App\Http\Controllers\Web\QuotationController;
 use App\Http\Controllers\Web\SerialNumberController;
+use App\Http\Controllers\Web\SettingController;
 use App\Http\Controllers\Web\StockAdjustmentController;
 use App\Http\Controllers\Web\StockController;
 use App\Http\Controllers\Web\StockTransferController;
@@ -68,8 +70,28 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::resource('stock-adjustments', StockAdjustmentController::class)
         ->parameters(['stock-adjustments' => 'stock_adjustment']);
 
+    // ── ใบเสนอราคา ──
+    // การกระทำที่เปลี่ยนสถานะแยกเป็น route ของตัวเอง เพราะใช้สิทธิ์คนละตัวกับการแก้ไขใบ
+    Route::controller(QuotationController::class)->prefix('quotations')->name('quotations.')->group(function (): void {
+        Route::get('{quotation}/pdf', 'pdf')->name('pdf');
+        Route::post('{quotation}/submit', 'submit')->name('submit');
+        Route::post('{quotation}/approve', 'approve')->name('approve');
+        Route::post('{quotation}/return', 'returnToDraft')->name('return');
+        Route::post('{quotation}/send', 'send')->name('send');
+        Route::post('{quotation}/accept', 'accept')->name('accept');
+        Route::post('{quotation}/reject', 'reject')->name('reject');
+        Route::post('{quotation}/cancel', 'cancel')->name('cancel');
+        Route::post('{quotation}/revise', 'revise')->name('revise');
+    });
+    Route::resource('quotations', QuotationController::class);
+
     // ── ผู้ใช้งานระบบ ──
     Route::resource('users', UserController::class)->except(['show']);
+
+    // ── ตั้งค่าระบบ ──
+    Route::get('settings', [SettingController::class, 'index'])->name('settings.index');
+    Route::put('settings', [SettingController::class, 'update'])->name('settings.update');
+    Route::get('settings/asset/{key}', [SettingController::class, 'asset'])->name('settings.asset');
 
     // ── โปรไฟล์ของตัวเอง ──
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');

@@ -54,15 +54,28 @@ php artisan serve
 
 เปิด <http://localhost:8000>
 
+### ฟอนต์ภาษาไทยของ PDF
+
+ฟอนต์ **Sarabun** (สัญญาอนุญาต OFL) ถูก commit ไว้ที่ [resources/fonts/sarabun/](resources/fonts/sarabun/) แล้ว ไม่ต้องติดตั้งเพิ่ม
+`QuotationPdfService` ลงทะเบียนฟอนต์กับ dompdf ตอนเรนเดอร์ เหตุผลอยู่ใน [ADR-011](docs/DECISIONS.md)
+
+### งานตามเวลา
+
+ใบเสนอราคาที่เลยวันยืนราคาต้องถูกเปลี่ยนเป็นหมดอายุทุกเช้า 06:00 — บน production ให้ตั้ง cron
+
+```
+* * * * * cd /path/to/texson && php artisan schedule:run >> /dev/null 2>&1
+```
+
 ### บัญชีตัวอย่างหลัง `--seed`
 
 `UserSeeder` สร้างผู้ใช้หนึ่งคนต่อหนึ่ง role ไว้ทดสอบสิทธิ์ — **รหัสผ่านทุกบัญชีคือ `texson1234`** และ seeder จะข้ามตัวเองอัตโนมัติเมื่อ `APP_ENV=production`
 
 | อีเมล | บทบาท | เห็นอะไร |
 |---|---|---|
-| `admin@texson.local` | ผู้ดูแลระบบ | ทุกอย่าง รวมถึงจัดการผู้ใช้และลบถาวรตาม PDPA |
-| `manager@texson.local` | ผู้จัดการฝ่ายขาย | งานขายทั้งหมด + ราคาทุนและ margin |
-| `sales1@texson.local` | ฝ่ายขาย | ลูกค้าแบบเต็ม · สินค้าและยอดคงเหลืออ่านอย่างเดียว ไม่เห็นราคาทุน |
+| `admin@texson.local` | ผู้ดูแลระบบ | ทุกอย่าง รวมถึงจัดการผู้ใช้ ตั้งค่าระบบ และลบถาวรตาม PDPA |
+| `manager@texson.local` | ผู้จัดการฝ่ายขาย | งานขายทั้งหมด · **อนุมัติใบเสนอราคา** · เห็นใบของ sales ทุกคน |
+| `sales1@texson.local` | ฝ่ายขาย | ลูกค้าแบบเต็ม · ใบเสนอราคาเฉพาะของตัวเอง · เห็นราคาทุนเพื่อคุม margin ([ADR-012](docs/DECISIONS.md)) |
 | `warehouse@texson.local` | คลังสินค้า | สินค้า ผู้ขาย หมวดหมู่ ยี่ห้อ คลัง · เอกสารคลังทั้งหมดและ ledger |
 | `engineer@texson.local` | วิศวกร | ดูสินค้า ลูกค้า ยอดคงเหลือ และ ledger เพื่อเตรียมงานหน้างาน |
 | `viewer@texson.local` | ผู้ดูอย่างเดียว | อ่านได้ทุกหน้าที่ได้รับสิทธิ์ แก้ไม่ได้เลย |
@@ -86,6 +99,8 @@ php artisan serve
 | `vendor/bin/pint` | จัดรูปแบบโค้ด — **รันก่อน commit ทุกครั้ง** |
 | `vendor/bin/pint --test` | ตรวจอย่างเดียว ไม่แก้ไฟล์ (ใช้ใน CI) |
 | `php artisan migrate:fresh --seed` | ล้าง DB แล้วสร้างใหม่พร้อมข้อมูลตัวอย่าง |
+| `php artisan quotations:expire` | เปลี่ยนใบเสนอราคาที่เลยวันยืนราคาเป็นหมดอายุ (ตั้งเวลาไว้ 06:00 ทุกวัน) |
+| `php artisan schedule:work` | รัน scheduler บนเครื่องพัฒนา |
 
 ---
 
@@ -117,7 +132,7 @@ app/
 | 0 | Scaffolding, Breeze, Pint, Pest, packages, `.env.example` | ✅ เสร็จ |
 | 1 | Master data: users/roles, customers+contacts+sites, categories, brands, suppliers, warehouses, products | ✅ เสร็จ |
 | 2 | Inventory: stock levels, ledger, รับเข้า, ปรับปรุง, โอนคลัง, serial, low-stock | ✅ เสร็จ |
-| 3 | Quotation: CRUD, คำนวณ, lifecycle, revision, อนุมัติ, PDF ไทย/อังกฤษ | ⬜ |
+| 3 | Quotation: CRUD, คำนวณ, lifecycle, revision, อนุมัติ, PDF ไทย/อังกฤษ, ส่งเมล | ✅ เสร็จ |
 | 4 | Sales Order → Delivery → ตัดสต็อก + serial + backorder | ⬜ |
 | 5 | Dashboard + รายงาน + Excel export | ⬜ |
 | 6 | Hardening + `docs/SECURITY.md` + คู่มือผู้ใช้ | ⬜ |

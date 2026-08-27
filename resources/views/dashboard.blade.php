@@ -11,15 +11,35 @@
             ['label' => __('ผู้ขาย'), 'value' => $stats['suppliers'], 'route' => 'suppliers.index', 'icon' => 'truck'],
         ];
 
+        if ($canSeeQuotations) {
+            $tiles[] = ['label' => __('ใบเสนอราคาที่ยังเปิดอยู่'), 'value' => $quotationStats['open'], 'route' => 'quotations.index', 'icon' => 'document'];
+            $tiles[] = [
+                'label' => __('รออนุมัติ'),
+                'value' => $quotationStats['pending_approval'],
+                'route' => 'quotations.index',
+                'params' => ['status' => 'pending_approval'],
+                'icon' => 'clipboard',
+                'alert' => $quotationStats['pending_approval'] > 0,
+            ];
+            $tiles[] = [
+                'label' => __('ใกล้หมดอายุใน 7 วัน'),
+                'value' => $quotationStats['expiring'],
+                'route' => 'quotations.index',
+                'params' => ['expiring' => 1],
+                'icon' => 'chart',
+                'alert' => $quotationStats['expiring'] > 0,
+            ];
+        }
+
         if ($canSeeStock) {
             $tiles[] = ['label' => __('สินค้าเหลือน้อย'), 'value' => $lowStockCount, 'route' => 'stock.index', 'icon' => 'stack', 'alert' => $lowStockCount > 0];
             $tiles[] = ['label' => __('ประกันหมดใน 90 วัน'), 'value' => $warrantyExpiring, 'route' => 'serial-numbers.index', 'icon' => 'badge'];
         }
     @endphp
 
-    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
         @foreach ($tiles as $tile)
-            <a href="{{ route($tile['route']) }}"
+            <a href="{{ route($tile['route'], $tile['params'] ?? []) }}"
                class="group rounded-xl border bg-white p-4 shadow-sm transition hover:shadow
                       {{ ($tile['alert'] ?? false) ? 'border-amber-300 bg-amber-50/60' : 'border-gray-200 hover:border-aqua-300' }}">
                 <div class="flex items-center justify-between">
@@ -32,6 +52,66 @@
             </a>
         @endforeach
     </div>
+
+    @if ($awaitingApproval->isNotEmpty() || $expiringQuotations->isNotEmpty())
+        <div class="mt-6 grid gap-4 lg:grid-cols-2">
+            @if ($awaitingApproval->isNotEmpty())
+                <x-card :padded="false">
+                    <x-slot name="header">
+                        <div>
+                            <h2 class="text-sm font-semibold text-navy-900">{{ __('ใบเสนอราคารออนุมัติจากคุณ') }}</h2>
+                            <p class="text-xs text-gray-500">{{ __('เข้าเกณฑ์ส่วนลด margin หรือยอดสุทธิที่ตั้งไว้') }}</p>
+                        </div>
+                    </x-slot>
+
+                    @foreach ($awaitingApproval as $quotation)
+                        <div class="flex items-center justify-between gap-3 border-b border-gray-50 px-5 py-3 text-sm last:border-0">
+                            <div class="min-w-0">
+                                <a href="{{ route('quotations.show', $quotation) }}" class="tabular font-medium text-navy-900 hover:text-aqua-600">
+                                    {{ $quotation->displayNo() }}
+                                </a>
+                                <p class="truncate text-xs text-gray-500">
+                                    {{ $quotation->customer->name_th }} · {{ $quotation->salesUser->name }}
+                                </p>
+                            </div>
+                            <span class="tabular shrink-0 font-semibold text-navy-900">
+                                {{ number_format((float) $quotation->grand_total, 2) }}
+                            </span>
+                        </div>
+                    @endforeach
+                </x-card>
+            @endif
+
+            @if ($expiringQuotations->isNotEmpty())
+                <x-card :padded="false">
+                    <x-slot name="header">
+                        <div>
+                            <h2 class="text-sm font-semibold text-navy-900">{{ __('ใบที่ใกล้หมดอายุใน 7 วัน') }}</h2>
+                            <p class="text-xs text-gray-500">{{ __('เลยวันยืนราคาแล้วระบบจะเปลี่ยนเป็นหมดอายุอัตโนมัติทุกเช้า') }}</p>
+                        </div>
+                        <a href="{{ route('quotations.index', ['expiring' => 1]) }}" class="text-xs font-medium text-aqua-600 hover:text-aqua-700">
+                            {{ __('ดูทั้งหมด') }}
+                        </a>
+                    </x-slot>
+
+                    @foreach ($expiringQuotations as $quotation)
+                        @php $daysLeft = $quotation->daysUntilExpiry(); @endphp
+                        <div class="flex items-center justify-between gap-3 border-b border-gray-50 px-5 py-3 text-sm last:border-0">
+                            <div class="min-w-0">
+                                <a href="{{ route('quotations.show', $quotation) }}" class="tabular font-medium text-navy-900 hover:text-aqua-600">
+                                    {{ $quotation->displayNo() }}
+                                </a>
+                                <p class="truncate text-xs text-gray-500">{{ $quotation->customer->name_th }}</p>
+                            </div>
+                            <x-badge :color="$daysLeft <= 2 ? 'red' : 'amber'" class="shrink-0">
+                                {{ $daysLeft <= 0 ? __('หมดอายุวันนี้') : __('เหลือ :days วัน', ['days' => $daysLeft]) }}
+                            </x-badge>
+                        </div>
+                    @endforeach
+                </x-card>
+            @endif
+        </div>
+    @endif
 
     @if ($canSeeStock && array_sum($draftDocuments) > 0)
         <div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-aqua-200 bg-aqua-50 px-4 py-3 text-sm text-aqua-900">

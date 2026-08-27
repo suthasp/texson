@@ -21,14 +21,15 @@ it('sales แก้ไขสินค้าไม่ได้ (403)', function (
     expect(Product::find($product->id))->not->toBeNull();
 });
 
-it('sales ดูรายการสินค้าได้แต่ไม่เห็นราคาทุน', function (): void {
+it('sales เห็นราคาทุนตั้งแต่ Phase 3 เพราะต้องคุม margin ตอนออกใบเสนอราคา', function (): void {
+    // ADR-012 — สเปกข้อ 4.5 บังคับให้ margin ขึ้นสดบนหน้าจอออกใบ ซึ่งเป็นหน้าจอของฝ่ายขายเอง
     actingAsRole(RoleName::Sales);
     Product::factory()->create(['cost_price' => '99999.00', 'list_price' => '135000.00']);
 
     $this->get(route('products.index'))
         ->assertOk()
         ->assertSee('135,000.00')
-        ->assertDontSee('99,999.00');
+        ->assertSee('99,999.00');
 });
 
 it('ผู้จัดการฝ่ายขายเห็นราคาทุนได้เพราะต้องตรวจ margin ก่อนอนุมัติ', function (): void {
@@ -37,6 +38,16 @@ it('ผู้จัดการฝ่ายขายเห็นราคาท�
 
     $this->get(route('products.index'))->assertOk()->assertSee('99,999.00');
 });
+
+it('role ที่ไม่ได้ทำงานขายยังไม่เห็นราคาทุน', function (RoleName $role): void {
+    actingAsRole($role);
+    Product::factory()->create(['cost_price' => '99999.00', 'list_price' => '135000.00']);
+
+    $this->get(route('products.index'))
+        ->assertOk()
+        ->assertSee('135,000.00')
+        ->assertDontSee('99,999.00');
+})->with([RoleName::Engineer, RoleName::Viewer]);
 
 it('warehouse แตะข้อมูลลูกค้าเชิงแก้ไขไม่ได้', function (): void {
     actingAsRole(RoleName::Warehouse);

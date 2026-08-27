@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolePermissionSeeder::class,
+            SettingSeeder::class,
             MasterDataSeeder::class,
             SupplierSeeder::class,
             ProductSeeder::class,
@@ -22,6 +23,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             // ต้องอยู่หลัง UserSeeder เพราะใบปรับปรุงยอดยกมาต้องมีผู้ทำรายการ
             OpeningStockSeeder::class,
+            // ต้องอยู่ท้ายสุด — ใบเสนอราคาตัวอย่างอ้างถึงลูกค้า สินค้า และผู้ใช้ที่สร้างไปแล้ว
+            QuotationSeeder::class,
         ]);
     }
 }

@@ -1,7 +1,7 @@
 # TEXSON Platform — ERD Phase 1
 
 > อ้างอิง `CLAUDE.md` หัวข้อ 3 (Database Schema) และ 12.2
-> สถานะ: **รออนุมัติ** ก่อนเริ่ม Phase 0
+> สถานะ: **สร้างจริงแล้วถึง Phase 3** — ส่วนที่ต่างจากแบบร่างเดิมสรุปไว้ในหัวข้อ 3
 
 ## 1. ภาพรวมโดเมน
 
@@ -110,7 +110,10 @@ erDiagram
         vat_amount decimal_15_2
         grand_total decimal_15_2
         status enum "draft/pending_approval/sent/accepted/rejected/expired/cancelled"
+        cost_total decimal_15_2 "ผลรวม cost_snapshot ทุกบรรทัด"
         approved_by bigint FK
+        approved_at timestamp "อนุมัติแล้วแต่ status ยังเป็น pending_approval (ADR-010)"
+        superseded_at timestamp "ถูกแทนที่ด้วย revision (ADR-002)"
         deleted_at timestamp
     }
     QUOTATION_ITEMS {
@@ -123,8 +126,18 @@ erDiagram
         qty decimal_15_3
         unit_price decimal_15_2 "snapshot"
         discount_percent decimal_5_2
+        discount_amount decimal_15_2
         line_total decimal_15_2
-        cost_snapshot decimal_15_2
+        sku_snapshot string "snapshot"
+        uom string "snapshot"
+        cost_snapshot decimal_15_2 "มาจาก products.cost_price เท่านั้น (ADR-013)"
+        lead_time_days smallint
+    }
+    SETTINGS {
+        id bigint PK
+        key string "UK · ข้อมูลบริษัท / ค่าเริ่มต้นเอกสาร / เกณฑ์อนุมัติ"
+        value json
+        group string
     }
     NUMBER_SEQUENCES {
         id bigint PK
@@ -134,7 +147,17 @@ erDiagram
     }
 ```
 
-## 3. เส้นทาง Phase 2 (ยังไม่สร้าง — บันทึกไว้ใน docs/PHASE2-NOTES.md)
+## 3. หมายเหตุที่เพิ่มหลังเริ่มลงมือ
+
+| เรื่อง | สรุป | อ้างอิง |
+|---|---|---|
+| unique ของเลขที่ใบเสนอราคา | เป็นคู่ `(quote_no, revision)` ไม่ใช่ `quote_no` เดี่ยว — ฉบับแก้ไขใช้เลขเดิม | [ADR-009](DECISIONS.md) |
+| สถานะ "อนุมัติแล้ว" | ไม่มีใน enum — ใช้ `approved_at` บนใบที่ยังเป็น `pending_approval` | [ADR-010](DECISIONS.md) |
+| ถูกแทนที่ | `superseded_at` แยกจาก `status` เพื่อไม่ให้รายงาน win rate เพี้ยน | [ADR-002](DECISIONS.md) |
+| ต้นทุนในบรรทัด | เขียนทับจาก `products.cost_price` เสมอ ไม่รับจากฟอร์ม | [ADR-013](DECISIONS.md) |
+| เอกสารคลัง | `goods_receipts` และ `stock_transfers` เพิ่มเข้ามาเติมช่องว่างของ `ref_type` | [ADR-005](DECISIONS.md) |
+
+## 4. เส้นทาง Phase 2 (ยังไม่สร้าง — บันทึกไว้ใน docs/PHASE2-NOTES.md)
 
 `customer_sites` → `assets` → `work_orders` → `service_reports`
 `serial_numbers.customer_site_id` = จุดเชื่อมสินค้าที่ขายไปกับ asset ที่ต้องทำ PM

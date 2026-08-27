@@ -4,11 +4,14 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Web;
 
+use App\Enums\PermissionName;
+use App\Enums\QuotationStatus;
 use App\Enums\StockDocumentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\GoodsReceipt;
 use App\Models\Product;
+use App\Models\Quotation;
 use App\Models\SerialNumber;
 use App\Models\StockAdjustment;
 use App\Models\StockLevel;
@@ -18,8 +21,10 @@ use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 /**
- * Dashboard ของ Phase 2 — สรุปข้อมูลหลักและสถานะคลัง
- * ตัวเลขยอดขาย / win rate / ใบเสนอราคาใกล้หมดอายุ จะเพิ่มใน Phase 5
+ * Dashboard — สรุปข้อมูลหลัก สถานะคลัง และงานขายที่ค้างอยู่
+ *
+ * ตัวเลขยอดขายรายเดือน/รายปี และ win rate เต็มรูปแบบจะเพิ่มใน Phase 5
+ * ตรงนี้แสดงเฉพาะสิ่งที่ต้องลงมือทำวันนี้: ใบรออนุมัติและใบใกล้หมดอายุ (spec 7)
  */
 class DashboardController extends Controller
 {
@@ -27,6 +32,10 @@ class DashboardController extends Controller
     {
         $user = $request->user();
         $canSeeStock = $user->can('viewAny', StockLevel::class);
+        $canSeeQuotations = $user->can('viewAny', Quotation::class);
+
+        // ใบที่ผู้ใช้คนนี้มีสิทธิ์เห็น — sales เห็นเฉพาะของตัวเอง (spec 8)
+        $visibleQuotations = fn () => Quotation::query()->visibleTo($user);
 
         return view('dashboard', [
             'stats' => [
@@ -50,6 +59,25 @@ class DashboardController extends Controller
                     ->whereBetween('warranty_end', [now()->toDateString(), now()->addDays(90)->toDateString()])
                     ->count()
                 : 0,
+            'canSeeQuotations' => $canSeeQuotations,
+            'quotationStats' => $canSeeQuotations ? [
+                'open' => $visibleQuotations()->open()->whereNull('superseded_at')->count(),
+                'pending_approval' => $visibleQuotations()->where('status', QuotationStatus::PendingApproval)->count(),
+                'expiring' => $visibleQuotations()->expiringWithin(7)->count(),
+            ] : [],
+            // ใบที่ต้องอนุมัติ แสดงเฉพาะคนที่อนุมัติได้จริง ไม่งั้นเป็นข้อมูลที่กดอะไรต่อไม่ได้
+            'awaitingApproval' => $canSeeQuotations && $user->can(PermissionName::QuotationApprove->value)
+                ? $visibleQuotations()
+                    ->where('status', QuotationStatus::PendingApproval)
+                    ->whereNull('approved_at')
+                    ->with(['customer:id,name_th', 'salesUser:id,name'])
+                    ->orderBy('issue_date')
+                    ->limit(5)
+                    ->get()
+                : collect(),
+            'expiringQuotations' => $canSeeQuotations
+                ? $visibleQuotations()->expiringWithin(7)->with('customer:id,name_th')->orderBy('valid_until')->limit(5)->get()
+                : collect(),
             'recentProducts' => Product::query()->with(['category', 'brand'])->latest()->limit(5)->get(),
             'recentCustomers' => Customer::query()->latest()->limit(5)->get(),
         ]);
