@@ -29,7 +29,11 @@
         [
             'label' => __('คลังสินค้า'),
             'items' => [
-                ['route' => null, 'label' => __('สต็อกคงเหลือ'), 'icon' => 'stack', 'phase' => 2],
+                ['route' => 'stock.index', 'label' => __('สต็อกคงเหลือ'), 'icon' => 'stack', 'can' => ['viewAny', App\Models\StockLevel::class]],
+                ['route' => 'goods-receipts.index', 'label' => __('ใบรับสินค้า'), 'icon' => 'truck', 'can' => ['viewAny', App\Models\GoodsReceipt::class]],
+                ['route' => 'stock-transfers.index', 'label' => __('ใบโอนคลัง'), 'icon' => 'stack', 'can' => ['viewAny', App\Models\StockTransfer::class]],
+                ['route' => 'stock-adjustments.index', 'label' => __('ใบปรับปรุงสต็อก'), 'icon' => 'clipboard', 'can' => ['viewAny', App\Models\StockAdjustment::class]],
+                ['route' => 'serial-numbers.index', 'label' => __('ทะเบียน Serial'), 'icon' => 'badge', 'can' => ['viewAny', App\Models\SerialNumber::class]],
                 ['route' => null, 'label' => __('รายงาน'), 'icon' => 'chart', 'phase' => 5],
             ],
         ],

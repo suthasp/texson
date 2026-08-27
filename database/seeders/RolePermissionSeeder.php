@@ -57,6 +57,19 @@ class RolePermissionSeeder extends Seeder
             ...PermissionName::readOnlyForResource('supplier'),
             PermissionName::CategoryViewAny->value,
             PermissionName::BrandViewAny->value,
+            // ฝ่ายขายต้องเห็นยอดคงเหลือตอนออกใบเสนอราคา แต่ไม่ได้แตะเอกสารคลัง
+            PermissionName::StockViewAny->value,
+            PermissionName::SerialViewAny->value,
+        ];
+
+        // งานคลังทั้งหมด: ยอดคงเหลือ ledger และเอกสารคลังสามใบ
+        $warehouseOperations = [
+            PermissionName::StockViewAny->value,
+            PermissionName::StockViewLedger->value,
+            ...PermissionName::forResource('goods_receipt'),
+            ...PermissionName::forResource('stock_transfer'),
+            ...PermissionName::forResource('stock_adjustment'),
+            ...PermissionName::forResource('serial'),
         ];
 
         return [
@@ -66,29 +79,35 @@ class RolePermissionSeeder extends Seeder
             RoleName::SalesManager->value => [
                 ...$salesCore,
                 PermissionName::ProductViewCost->value,
+                PermissionName::StockViewLedger->value,
                 PermissionName::ActivityViewAny->value,
             ],
 
             RoleName::Sales->value => $salesCore,
 
-            // คลัง: ดูแลข้อมูลสินค้าและผู้ขาย แต่ไม่ยุ่งกับข้อมูลลูกค้าเชิงลึก
+            // คลัง: ดูแลข้อมูลสินค้า ผู้ขาย และงานคลังทั้งหมด แต่ไม่ยุ่งกับข้อมูลลูกค้าเชิงลึก
             RoleName::Warehouse->value => [
                 ...PermissionName::forResource('product'),
                 ...PermissionName::forResource('supplier'),
                 ...PermissionName::forResource('category'),
                 ...PermissionName::forResource('brand'),
                 ...PermissionName::forResource('warehouse'),
+                ...$warehouseOperations,
                 PermissionName::CustomerViewAny->value,
                 PermissionName::CustomerView->value,
             ],
 
-            // วิศวกร: ดูข้อมูลเพื่อเตรียมงานหน้างาน ไม่แก้อะไร
+            // วิศวกร: ดูข้อมูลและเบิกของจากสต็อกรถเพื่อเตรียมงานหน้างาน
             RoleName::Engineer->value => [
                 ...PermissionName::readOnlyForResource('product'),
                 ...PermissionName::readOnlyForResource('customer'),
                 PermissionName::WarehouseViewAny->value,
                 PermissionName::CategoryViewAny->value,
                 PermissionName::BrandViewAny->value,
+                PermissionName::StockViewAny->value,
+                PermissionName::StockViewLedger->value,
+                ...PermissionName::readOnlyForResource('serial'),
+                ...PermissionName::readOnlyForResource('stock_transfer'),
             ],
 
             RoleName::Viewer->value => [
@@ -98,6 +117,11 @@ class RolePermissionSeeder extends Seeder
                 PermissionName::CategoryViewAny->value,
                 PermissionName::BrandViewAny->value,
                 PermissionName::WarehouseViewAny->value,
+                PermissionName::StockViewAny->value,
+                ...PermissionName::readOnlyForResource('serial'),
+                ...PermissionName::readOnlyForResource('goods_receipt'),
+                ...PermissionName::readOnlyForResource('stock_transfer'),
+                ...PermissionName::readOnlyForResource('stock_adjustment'),
             ],
         ];
     }

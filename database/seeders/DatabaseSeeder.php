@@ -20,6 +20,8 @@ class DatabaseSeeder extends Seeder
             ProductSeeder::class,
             CustomerSeeder::class,
             UserSeeder::class,
+            // ต้องอยู่หลัง UserSeeder เพราะใบปรับปรุงยอดยกมาต้องมีผู้ทำรายการ
+            OpeningStockSeeder::class,
         ]);
     }
 }

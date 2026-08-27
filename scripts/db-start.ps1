@@ -1,6 +1,11 @@
 <#
-    เริ่ม MariaDB แบบ portable สำหรับเครื่องพัฒนา (ไม่ต้องใช้สิทธิ์ admin, ไม่ลง Windows service)
-    ใช้คู่กับ scripts\db-stop.ps1 — รายละเอียดอยู่ที่ docs/DEV-SETUP.md
+    Start the portable MariaDB used for development.
+    No admin rights needed and no Windows service is installed.
+    See docs/DEV-SETUP.md for the full setup.
+
+    NOTE: keep this file pure ASCII. Windows PowerShell 5.1 decodes .ps1 files
+    using the system ANSI codepage unless they carry a UTF-8 BOM, so non-ASCII
+    text here turns into mojibake and breaks parsing on Thai-locale machines.
 #>
 
 $ErrorActionPreference = 'Stop'
@@ -10,14 +15,14 @@ $DataRoot = Join-Path $env:LOCALAPPDATA 'texson-mariadb'
 $MyIni    = Join-Path $DataRoot 'my.ini'
 
 if (-not (Test-Path "$MariaBin\mariadbd.exe")) {
-    throw "ไม่พบ MariaDB ที่ $MariaBin — ดูขั้นตอนติดตั้งที่ docs/DEV-SETUP.md"
+    throw "MariaDB not found at $MariaBin - see docs/DEV-SETUP.md for install steps"
 }
 if (-not (Test-Path $MyIni)) {
-    throw "ไม่พบไฟล์ตั้งค่า $MyIni — ดูขั้นตอนติดตั้งที่ docs/DEV-SETUP.md"
+    throw "Config file not found at $MyIni - see docs/DEV-SETUP.md for install steps"
 }
 
 if (Get-Process mariadbd -ErrorAction SilentlyContinue) {
-    Write-Host 'MariaDB ทำงานอยู่แล้ว' -ForegroundColor Yellow
+    Write-Host 'MariaDB is already running' -ForegroundColor Yellow
     exit 0
 }
 
@@ -27,9 +32,9 @@ for ($i = 1; $i -le 30; $i++) {
     Start-Sleep -Milliseconds 500
     & "$MariaBin\mariadb-admin.exe" --defaults-file="$MyIni" -h 127.0.0.1 -u root -ptexson_dev_2026 ping *> $null
     if ($LASTEXITCODE -eq 0) {
-        Write-Host 'MariaDB พร้อมใช้งานที่ 127.0.0.1:3306' -ForegroundColor Green
+        Write-Host 'MariaDB is ready on 127.0.0.1:3306' -ForegroundColor Green
         exit 0
     }
 }
 
-throw "MariaDB เริ่มไม่ขึ้น — ดู log ที่ $DataRoot\error.log"
+throw "MariaDB failed to start - check the log at $DataRoot\error.log"

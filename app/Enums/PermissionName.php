@@ -64,6 +64,41 @@ enum PermissionName: string
     case UserUpdate = 'user.update';
     case UserDelete = 'user.delete';
 
+    // ── สต็อก (ยอดคงเหลือและ ledger) ──
+    case StockViewAny = 'stock.viewAny';
+    /** ดูประวัติการเคลื่อนไหวย้อนหลัง */
+    case StockViewLedger = 'stock.viewLedger';
+
+    // ── ใบรับสินค้า ──
+    case GoodsReceiptViewAny = 'goods_receipt.viewAny';
+    case GoodsReceiptView = 'goods_receipt.view';
+    case GoodsReceiptCreate = 'goods_receipt.create';
+    case GoodsReceiptUpdate = 'goods_receipt.update';
+    /** บันทึกใบเข้าสต็อกจริง — แยกจากสิทธิ์แก้ไขเพราะย้อนกลับไม่ได้ */
+    case GoodsReceiptPost = 'goods_receipt.post';
+    case GoodsReceiptDelete = 'goods_receipt.delete';
+
+    // ── ใบโอนคลัง ──
+    case StockTransferViewAny = 'stock_transfer.viewAny';
+    case StockTransferView = 'stock_transfer.view';
+    case StockTransferCreate = 'stock_transfer.create';
+    case StockTransferUpdate = 'stock_transfer.update';
+    case StockTransferPost = 'stock_transfer.post';
+    case StockTransferDelete = 'stock_transfer.delete';
+
+    // ── ใบปรับปรุงสต็อก ──
+    case StockAdjustmentViewAny = 'stock_adjustment.viewAny';
+    case StockAdjustmentView = 'stock_adjustment.view';
+    case StockAdjustmentCreate = 'stock_adjustment.create';
+    case StockAdjustmentUpdate = 'stock_adjustment.update';
+    case StockAdjustmentPost = 'stock_adjustment.post';
+    case StockAdjustmentDelete = 'stock_adjustment.delete';
+
+    // ── Serial number ──
+    case SerialViewAny = 'serial.viewAny';
+    case SerialView = 'serial.view';
+    case SerialUpdate = 'serial.update';
+
     // ── ประวัติการใช้งาน ──
     case ActivityViewAny = 'activity.viewAny';
 

@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -96,6 +97,43 @@ class Product extends Model
         return $this->belongsToMany(Supplier::class)
             ->withPivot(['supplier_sku', 'cost_price', 'lead_time_days', 'is_preferred'])
             ->withTimestamps();
+    }
+
+    /** @return HasMany<StockLevel, $this> */
+    public function stockLevels(): HasMany
+    {
+        return $this->hasMany(StockLevel::class);
+    }
+
+    /** @return HasMany<StockMovement, $this> */
+    public function stockMovements(): HasMany
+    {
+        return $this->hasMany(StockMovement::class);
+    }
+
+    /** @return HasMany<SerialNumber, $this> */
+    public function serialNumbers(): HasMany
+    {
+        return $this->hasMany(SerialNumber::class);
+    }
+
+    /**
+     * ยอดคงเหลือรวมทุกคลัง — ใช้ stock_levels ที่ eager load มาแล้วถ้ามี
+     */
+    public function totalOnHand(): string
+    {
+        return $this->stockLevels->reduce(
+            static fn (string $carry, StockLevel $level): string => bcadd($carry, (string) $level->qty_on_hand, 3),
+            '0.000',
+        );
+    }
+
+    public function totalAvailable(): string
+    {
+        return $this->stockLevels->reduce(
+            static fn (string $carry, StockLevel $level): string => bcadd($carry, $level->qty_available, 3),
+            '0.000',
+        );
     }
 
     /**

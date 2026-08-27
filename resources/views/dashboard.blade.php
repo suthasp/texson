@@ -2,32 +2,92 @@
     <x-slot name="title">{{ __('แดชบอร์ด') }}</x-slot>
 
     <x-page-header :title="__('แดชบอร์ด')"
-                   :subtitle="__('สรุปข้อมูลหลักของระบบ · ยอดขายและรายงานจะเพิ่มใน Phase 5')" />
+                   :subtitle="__('สรุปข้อมูลหลักและสถานะคลัง · ยอดขายและรายงานจะเพิ่มใน Phase 5')" />
 
     @php
         $tiles = [
             ['label' => __('ลูกค้า'), 'value' => $stats['customers'], 'route' => 'customers.index', 'icon' => 'users'],
             ['label' => __('สินค้า / อะไหล่'), 'value' => $stats['products'], 'route' => 'products.index', 'icon' => 'cube'],
             ['label' => __('ผู้ขาย'), 'value' => $stats['suppliers'], 'route' => 'suppliers.index', 'icon' => 'truck'],
-            ['label' => __('ยี่ห้อ'), 'value' => $stats['brands'], 'route' => 'brands.index', 'icon' => 'badge'],
-            ['label' => __('คลังสินค้า'), 'value' => $stats['warehouses'], 'route' => 'warehouses.index', 'icon' => 'building'],
         ];
+
+        if ($canSeeStock) {
+            $tiles[] = ['label' => __('สินค้าเหลือน้อย'), 'value' => $lowStockCount, 'route' => 'stock.index', 'icon' => 'stack', 'alert' => $lowStockCount > 0];
+            $tiles[] = ['label' => __('ประกันหมดใน 90 วัน'), 'value' => $warrantyExpiring, 'route' => 'serial-numbers.index', 'icon' => 'badge'];
+        }
     @endphp
 
     <div class="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-5">
         @foreach ($tiles as $tile)
             <a href="{{ route($tile['route']) }}"
-               class="group rounded-xl border border-gray-200 bg-white p-4 shadow-sm transition hover:border-aqua-300 hover:shadow">
+               class="group rounded-xl border bg-white p-4 shadow-sm transition hover:shadow
+                      {{ ($tile['alert'] ?? false) ? 'border-amber-300 bg-amber-50/60' : 'border-gray-200 hover:border-aqua-300' }}">
                 <div class="flex items-center justify-between">
-                    <p class="text-xs font-medium text-gray-500">{{ $tile['label'] }}</p>
-                    <x-nav-icon :name="$tile['icon']" class="h-4 w-4 text-gray-300 transition group-hover:text-aqua-400" />
+                    <p class="text-xs font-medium {{ ($tile['alert'] ?? false) ? 'text-amber-800' : 'text-gray-500' }}">{{ $tile['label'] }}</p>
+                    <x-nav-icon :name="$tile['icon']" class="h-4 w-4 {{ ($tile['alert'] ?? false) ? 'text-amber-500' : 'text-gray-300 group-hover:text-aqua-400' }} transition" />
                 </div>
-                <p class="tabular mt-2 text-2xl font-semibold text-navy-900">{{ number_format($tile['value']) }}</p>
+                <p class="tabular mt-2 text-2xl font-semibold {{ ($tile['alert'] ?? false) ? 'text-amber-900' : 'text-navy-900' }}">
+                    {{ number_format($tile['value']) }}
+                </p>
             </a>
         @endforeach
     </div>
 
+    @if ($canSeeStock && array_sum($draftDocuments) > 0)
+        <div class="mt-4 flex flex-wrap items-center gap-3 rounded-lg border border-aqua-200 bg-aqua-50 px-4 py-3 text-sm text-aqua-900">
+            <span class="font-medium">{{ __('เอกสารที่ยังเป็นร่าง รอกด post') }}:</span>
+            @if ($draftDocuments['goods_receipts'] > 0)
+                <a href="{{ route('goods-receipts.index', ['status' => 'draft']) }}" class="underline">
+                    {{ __('ใบรับสินค้า :count ใบ', ['count' => $draftDocuments['goods_receipts']]) }}
+                </a>
+            @endif
+            @if ($draftDocuments['transfers'] > 0)
+                <a href="{{ route('stock-transfers.index', ['status' => 'draft']) }}" class="underline">
+                    {{ __('ใบโอน :count ใบ', ['count' => $draftDocuments['transfers']]) }}
+                </a>
+            @endif
+            @if ($draftDocuments['adjustments'] > 0)
+                <a href="{{ route('stock-adjustments.index', ['status' => 'draft']) }}" class="underline">
+                    {{ __('ใบปรับปรุง :count ใบ', ['count' => $draftDocuments['adjustments']]) }}
+                </a>
+            @endif
+        </div>
+    @endif
+
     <div class="mt-6 grid gap-4 lg:grid-cols-2">
+        @if ($canSeeStock)
+            <x-card :padded="false" class="lg:col-span-2">
+                <x-slot name="header">
+                    <div>
+                        <h2 class="text-sm font-semibold text-navy-900">{{ __('สินค้าที่คงเหลือต่ำกว่าจุดสั่งซื้อ') }}</h2>
+                        <p class="text-xs text-gray-500">{{ __('เทียบยอดพร้อมขาย (คงเหลือ − จอง) กับสต็อกขั้นต่ำของสินค้า') }}</p>
+                    </div>
+                    @if ($lowStockCount > 0)
+                        <a href="{{ route('stock.index', ['low_stock' => 1]) }}" class="text-xs font-medium text-aqua-600 hover:text-aqua-700">
+                            {{ __('ดูทั้งหมด :count รายการ', ['count' => number_format($lowStockCount)]) }}
+                        </a>
+                    @endif
+                </x-slot>
+
+                @forelse ($lowStock as $level)
+                    <div class="flex items-center justify-between gap-3 border-b border-gray-50 px-5 py-3 text-sm last:border-0">
+                        <div class="min-w-0">
+                            <a href="{{ route('products.show', $level->product) }}" class="tabular truncate font-medium text-navy-900 hover:text-aqua-600">
+                                {{ $level->product->sku }}
+                            </a>
+                            <p class="truncate text-xs text-gray-500">{{ $level->product->name_th }} · {{ $level->warehouse->code }}</p>
+                        </div>
+                        <div class="shrink-0 text-end">
+                            <p class="tabular font-semibold text-amber-700">{{ number_format((float) $level->qty_available, 3) }}</p>
+                            <p class="tabular text-xs text-gray-400">{{ __('ขั้นต่ำ') }} {{ number_format((float) $level->product->min_stock, 3) }}</p>
+                        </div>
+                    </div>
+                @empty
+                    <x-empty-state :message="__('ไม่มีสินค้าที่ต่ำกว่าจุดสั่งซื้อ')" />
+                @endforelse
+            </x-card>
+        @endif
+
         <x-card :title="__('สินค้าที่เพิ่มล่าสุด')" :padded="false">
             @forelse ($recentProducts as $product)
                 <a href="{{ route('products.show', $product) }}"

@@ -62,9 +62,9 @@ php artisan serve
 |---|---|---|
 | `admin@texson.local` | ผู้ดูแลระบบ | ทุกอย่าง รวมถึงจัดการผู้ใช้และลบถาวรตาม PDPA |
 | `manager@texson.local` | ผู้จัดการฝ่ายขาย | งานขายทั้งหมด + ราคาทุนและ margin |
-| `sales1@texson.local` | ฝ่ายขาย | ลูกค้าแบบเต็ม · สินค้าแบบอ่านอย่างเดียว ไม่เห็นราคาทุน |
-| `warehouse@texson.local` | คลังสินค้า | สินค้า ผู้ขาย หมวดหมู่ ยี่ห้อ คลัง |
-| `engineer@texson.local` | วิศวกร | ดูสินค้าและลูกค้าเพื่อเตรียมงานหน้างาน |
+| `sales1@texson.local` | ฝ่ายขาย | ลูกค้าแบบเต็ม · สินค้าและยอดคงเหลืออ่านอย่างเดียว ไม่เห็นราคาทุน |
+| `warehouse@texson.local` | คลังสินค้า | สินค้า ผู้ขาย หมวดหมู่ ยี่ห้อ คลัง · เอกสารคลังทั้งหมดและ ledger |
+| `engineer@texson.local` | วิศวกร | ดูสินค้า ลูกค้า ยอดคงเหลือ และ ledger เพื่อเตรียมงานหน้างาน |
 | `viewer@texson.local` | ผู้ดูอย่างเดียว | อ่านได้ทุกหน้าที่ได้รับสิทธิ์ แก้ไม่ได้เลย |
 
 > ระบบนี้**ไม่เปิดให้สมัครสมาชิกเอง** — ผู้ใช้ถูกสร้างโดยผู้ดูแลระบบที่หน้า *ตั้งค่า → ผู้ใช้งาน* เท่านั้น
@@ -82,7 +82,7 @@ php artisan serve
 | `php artisan serve` | รันเว็บที่ port 8000 |
 | `npm run dev` | Vite dev server (hot reload) |
 | `php artisan test` | รัน Pest ทั้งชุด (ใช้ DB `texson_test`) |
-| `php artisan test --filter=Quotation` | รันเฉพาะเทสต์ที่ชื่อตรง |
+| `php artisan test --filter=Inventory` | รันเฉพาะเทสต์ที่ชื่อตรง |
 | `vendor/bin/pint` | จัดรูปแบบโค้ด — **รันก่อน commit ทุกครั้ง** |
 | `vendor/bin/pint --test` | ตรวจอย่างเดียว ไม่แก้ไฟล์ (ใช้ใน CI) |
 | `php artisan migrate:fresh --seed` | ล้าง DB แล้วสร้างใหม่พร้อมข้อมูลตัวอย่าง |
@@ -116,7 +116,7 @@ app/
 |---|---|---|
 | 0 | Scaffolding, Breeze, Pint, Pest, packages, `.env.example` | ✅ เสร็จ |
 | 1 | Master data: users/roles, customers+contacts+sites, categories, brands, suppliers, warehouses, products | ✅ เสร็จ |
-| 2 | Inventory: stock levels, ledger, รับเข้า, ปรับปรุง, โอนคลัง, serial | ⬜ |
+| 2 | Inventory: stock levels, ledger, รับเข้า, ปรับปรุง, โอนคลัง, serial, low-stock | ✅ เสร็จ |
 | 3 | Quotation: CRUD, คำนวณ, lifecycle, revision, อนุมัติ, PDF ไทย/อังกฤษ | ⬜ |
 | 4 | Sales Order → Delivery → ตัดสต็อก + serial + backorder | ⬜ |
 | 5 | Dashboard + รายงาน + Excel export | ⬜ |
