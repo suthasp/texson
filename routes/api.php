@@ -82,6 +82,7 @@ Route::prefix('v1')->name('api.v1.')->group(function (): void {
         Route::apiResource('deliveries', DeliveryController::class)->except(['store']);
 
         // ── รายงาน ──
+        Route::get('reports/dashboard', [ReportController::class, 'dashboard'])->name('reports.dashboard');
         Route::get('reports/low-stock', [ReportController::class, 'lowStock'])->name('reports.low-stock');
         Route::get('reports/sales-summary', [ReportController::class, 'salesSummary'])->name('reports.sales-summary');
     });

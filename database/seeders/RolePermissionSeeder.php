@@ -66,6 +66,9 @@ class RolePermissionSeeder extends Seeder
             // ฝ่ายขายจึงดูใบส่งของได้อย่างเดียว ออกและ post ไม่ได้
             ...PermissionName::forResource('sales_order'),
             ...PermissionName::readOnlyForResource('delivery'),
+            // รายงานกรองด้วย visibleTo อยู่แล้ว ฝ่ายขายจึงเห็นเฉพาะตัวเลขของตัวเอง
+            PermissionName::ReportViewAny->value,
+            PermissionName::ReportExport->value,
             // ฝ่ายขายต้องเห็นราคาทุนตั้งแต่ Phase 3 (ADR-012) — สเปกข้อ 4.5 บังคับให้
             // margin ขึ้นสดบนหน้าจอตอนออกใบ ซึ่งเป็นหน้าจอของฝ่ายขายเอง
             PermissionName::ProductViewCost->value,
@@ -88,6 +91,8 @@ class RolePermissionSeeder extends Seeder
             PermissionName::SalesOrderViewAny->value,
             PermissionName::SalesOrderView->value,
             ...PermissionName::forResource('delivery'),
+            PermissionName::ReportViewAny->value,
+            PermissionName::ReportExport->value,
         ];
 
         return [
@@ -129,6 +134,7 @@ class RolePermissionSeeder extends Seeder
                 ...PermissionName::readOnlyForResource('serial'),
                 ...PermissionName::readOnlyForResource('stock_transfer'),
                 ...PermissionName::readOnlyForResource('delivery'),
+                PermissionName::ReportViewAny->value,
             ],
 
             RoleName::Viewer->value => [
@@ -145,6 +151,7 @@ class RolePermissionSeeder extends Seeder
                 ...PermissionName::readOnlyForResource('stock_adjustment'),
                 ...PermissionName::readOnlyForResource('sales_order'),
                 ...PermissionName::readOnlyForResource('delivery'),
+                PermissionName::ReportViewAny->value,
             ],
         ];
     }

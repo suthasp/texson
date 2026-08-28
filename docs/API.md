@@ -249,8 +249,30 @@ curl http://localhost:8000/api/v1/products \
 
 | Method | Path | สิทธิ์ |
 |---|---|---|
+| `GET` | `/reports/dashboard` | `quotation.viewAny` |
 | `GET` | `/reports/low-stock` | `stock.viewAny` |
 | `GET` | `/reports/sales-summary?from=&to=` | `quotation.viewAny` |
+
+`/reports/dashboard` คืนตัวเลขชุดเดียวกับแดชบอร์ดบนเว็บในครั้งเดียว — ยอดขายเดือนนี้/ปีนี้,
+win rate, งานค้าง, มูลค่าสต็อก และยอดรายเดือน 12 เดือนล่าสุด
+
+ทุกตัวเลขมาจาก `ReportService` ตัวเดียวกับหน้าเว็บ ([ADR-022](DECISIONS.md)) จึงไม่มีทางต่างจากหน้าจอ
+
+```json
+{
+  "data": {
+    "sales_this_month": { "ordered": "321000.00", "delivered": "321000.00", "margin": "100000.00", "order_count": 1 },
+    "quotations_this_year": { "win_rate": "75.00", "accepted_count": 3, "decided_count": 4 },
+    "actions": { "quotations_pending_approval": 1, "orders_to_ship": 2 },
+    "stock": { "value_at_cost": "11002.00", "low_stock_count": 3 },
+    "monthly_sales": [{ "month": "2026-08", "label": "ส.ค. 2026", "count": 3, "total": "759856.22" }]
+  },
+  "meta": { "sales_basis": "sales_orders.order_date, ไม่รวมใบที่ยกเลิก", "amounts_include_vat": true }
+}
+```
+
+> **นิยาม "ยอดขาย"** ([ADR-021](DECISIONS.md)): `SUM(grand_total)` ของใบสั่งขายที่ไม่ถูกยกเลิก นับตาม `order_date`
+> "ส่งมอบครบแล้ว" นับเฉพาะใบที่สถานะ `delivered` ทั้งใบ ไม่คิดมูลค่ารายบรรทัดของใบที่ส่งบางส่วน
 
 `/reports/sales-summary` ไม่ระบุช่วง = เดือนปัจจุบันถึงวันนี้
 

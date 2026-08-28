@@ -11,6 +11,8 @@ use App\Http\Resources\StockLevelResource;
 use App\Models\Quotation;
 use App\Models\SalesOrder;
 use App\Models\StockLevel;
+use App\Models\User;
+use App\Services\ReportService;
 use App\Support\Money;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,6 +21,44 @@ use Illuminate\Support\Carbon;
 
 class ReportController extends Controller
 {
+    public function __construct(private readonly ReportService $reports) {}
+
+    /**
+     * GET /api/v1/reports/dashboard
+     *
+     * ตัวเลขชุดเดียวกับแดชบอร์ดบนเว็บ สำหรับ client ที่ต้องการสรุปในครั้งเดียว
+     * ไม่ได้อยู่ในรายการของสเปกข้อ 6 แต่มาจาก ReportService ตัวเดียวกัน
+     * จึงไม่มีทางให้ตัวเลขต่างจากหน้าจอ
+     */
+    public function dashboard(Request $request): JsonResponse
+    {
+        $this->authorize('viewAny', Quotation::class);
+
+        /** @var User $user */
+        $user = $request->user();
+
+        $today = Carbon::now()->endOfDay();
+        $monthStart = Carbon::now()->startOfMonth();
+        $yearStart = Carbon::now()->startOfYear();
+
+        return response()->json([
+            'data' => [
+                'sales_this_month' => $this->reports->salesSummary($monthStart, $today, $user),
+                'sales_this_year' => $this->reports->salesSummary($yearStart, $today, $user),
+                'quotations_this_year' => $this->reports->quotationSummary($yearStart, $today, $user),
+                'actions' => $this->reports->actionItems($user),
+                'stock' => $this->reports->stockValuation(),
+                'monthly_sales' => $this->reports->monthlySales($user, 12),
+            ],
+            'meta' => [
+                'as_of' => $today->toIso8601String(),
+                'currency' => 'THB',
+                'amounts_include_vat' => true,
+                'sales_basis' => 'sales_orders.order_date, ไม่รวมใบที่ยกเลิก',
+            ],
+        ]);
+    }
+
     /**
      * GET /api/v1/reports/low-stock (spec 6)
      */

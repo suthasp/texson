@@ -34,7 +34,9 @@
                 ['route' => 'stock-transfers.index', 'label' => __('ใบโอนคลัง'), 'icon' => 'stack', 'can' => ['viewAny', App\Models\StockTransfer::class]],
                 ['route' => 'stock-adjustments.index', 'label' => __('ใบปรับปรุงสต็อก'), 'icon' => 'clipboard', 'can' => ['viewAny', App\Models\StockAdjustment::class]],
                 ['route' => 'serial-numbers.index', 'label' => __('ทะเบียน Serial'), 'icon' => 'badge', 'can' => ['viewAny', App\Models\SerialNumber::class]],
-                ['route' => null, 'label' => __('รายงาน'), 'icon' => 'chart', 'phase' => 5],
+                // spatie ลงทะเบียน permission เป็น Gate ให้อยู่แล้ว จึงเช็คด้วยชื่อสิทธิ์ตรง ๆ
+                // ไม่ต้องสร้าง Policy ปลอมให้โมเดลที่ไม่มีอยู่จริง
+                ['route' => 'reports.index', 'label' => __('รายงาน'), 'icon' => 'chart', 'can' => [App\Enums\PermissionName::ReportViewAny->value]],
             ],
         ],
         [

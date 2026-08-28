@@ -136,6 +136,11 @@ enum PermissionName: string
     case DeliveryPost = 'delivery.post';
     case DeliveryDelete = 'delivery.delete';
 
+    // ── รายงาน ──
+    case ReportViewAny = 'report.viewAny';
+    /** ดาวน์โหลดไฟล์ Excel — แยกจากการดูบนหน้าจอเพราะข้อมูลออกนอกระบบไปได้ */
+    case ReportExport = 'report.export';
+
     // ── ตั้งค่าระบบ (ข้อมูลบริษัท เงื่อนไขเอกสาร เกณฑ์อนุมัติ) ──
     case SettingViewAny = 'setting.viewAny';
     case SettingUpdate = 'setting.update';

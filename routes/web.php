@@ -13,6 +13,7 @@ use App\Http\Controllers\Web\DeliveryController;
 use App\Http\Controllers\Web\GoodsReceiptController;
 use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\QuotationController;
+use App\Http\Controllers\Web\ReportController;
 use App\Http\Controllers\Web\SalesOrderController;
 use App\Http\Controllers\Web\SerialNumberController;
 use App\Http\Controllers\Web\SettingController;
@@ -108,6 +109,14 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     Route::post('deliveries/{delivery}/post', [DeliveryController::class, 'post'])->name('deliveries.post');
     Route::resource('deliveries', DeliveryController::class)->except(['create', 'store']);
+
+    // ── รายงานและไฟล์ส่งออก ──
+    Route::controller(ReportController::class)->prefix('reports')->name('reports.')->group(function (): void {
+        Route::get('/', 'index')->name('index');
+        Route::get('export/products', 'exportProducts')->name('export.products');
+        Route::get('export/quotations', 'exportQuotations')->name('export.quotations');
+        Route::get('export/ledger', 'exportLedger')->name('export.ledger');
+    });
 
     // ── ผู้ใช้งานระบบ ──
     Route::resource('users', UserController::class)->except(['show']);

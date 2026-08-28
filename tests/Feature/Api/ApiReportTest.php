@@ -8,6 +8,7 @@ use App\Models\Product;
 use App\Models\Quotation;
 use App\Models\Warehouse;
 use App\Services\StockService;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 
 /**
@@ -162,4 +163,41 @@ it('คลังสินค้าเรียกสรุปยอดขาย�
     Sanctum::actingAs(userWithRole(RoleName::Warehouse));
 
     $this->getJson('/api/v1/reports/sales-summary')->assertStatus(403);
+});
+
+// ── แดชบอร์ดผ่าน API (Phase 5) ──────────────────────────
+
+it('แดชบอร์ดผ่าน API ให้ตัวเลขชุดเดียวกับหน้าเว็บ', function (): void {
+    $sales = userWithRole(RoleName::Sales);
+    $warehouse = Warehouse::factory()->create(['is_default' => true]);
+
+    App\Models\SalesOrder::factory()->forSales($sales)->inWarehouse($warehouse)
+        ->status(App\Enums\SalesOrderStatus::Delivered)
+        ->create(['grand_total' => '321000.00', 'after_discount' => '300000.00', 'cost_total' => '200000.00']);
+
+    Sanctum::actingAs($sales);
+
+    $response = $this->getJson('/api/v1/reports/dashboard')->assertOk();
+
+    expect($response->json('data.sales_this_month.ordered'))->toBe('321000.00')
+        ->and($response->json('data.sales_this_month.delivered'))->toBe('321000.00')
+        // กำไร = 300,000 − 200,000
+        ->and($response->json('data.sales_this_month.margin'))->toBe('100000.00')
+        ->and($response->json('data.monthly_sales'))->toHaveCount(12)
+        ->and($response->json('meta.amounts_include_vat'))->toBeTrue();
+
+    // ตรงกับ ReportService ที่หน้าเว็บใช้
+    $direct = app(App\Services\ReportService::class)->salesSummary(
+        Carbon::now()->startOfMonth(),
+        Carbon::now()->endOfDay(),
+        $sales,
+    );
+
+    expect($response->json('data.sales_this_month.ordered'))->toBe($direct['ordered']);
+});
+
+it('คลังสินค้าเรียกแดชบอร์ดผ่าน API ไม่ได้ เพราะไม่มีสิทธิ์ดูใบเสนอราคา', function (): void {
+    Sanctum::actingAs(userWithRole(RoleName::Warehouse));
+
+    $this->getJson('/api/v1/reports/dashboard')->assertStatus(403);
 });
