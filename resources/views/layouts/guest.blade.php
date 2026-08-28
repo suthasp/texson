@@ -20,8 +20,8 @@
 <body class="h-full bg-navy-900 font-sans text-gray-900 antialiased">
 <div class="flex min-h-full flex-col items-center justify-center px-4 py-10">
 
-    <div class="mb-6 flex flex-col items-center gap-1.5">
-        <x-application-logo on="dark" class="h-10 w-auto" />
+    <div class="mb-6 flex flex-col items-center gap-2">
+        <x-application-logo on="dark" size="lg" />
         <p class="text-xs text-navy-200">{{ __('ระบบอะไหล่และงานขาย') }}</p>
     </div>
 

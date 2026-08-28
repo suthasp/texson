@@ -56,9 +56,11 @@
 <aside class="fixed inset-y-0 start-0 z-40 w-64 -translate-x-full overflow-y-auto bg-navy-900 transition-transform duration-200 ltr:left-0 rtl:right-0 lg:static lg:translate-x-0"
        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
-    <a href="{{ route('dashboard') }}" class="flex h-16 flex-col justify-center gap-0.5 px-5">
-        <x-application-logo on="dark" class="h-6 w-auto" />
-        <span class="truncate text-[11px] text-navy-200">{{ __('Service & Parts') }}</span>
+    {{-- สูง h-16 เท่า topbar และมีเส้นคั่นเหมือนกัน หัวสองฝั่งจะได้อยู่ระดับเดียวกัน --}}
+    <a href="{{ route('dashboard') }}"
+       class="flex h-16 flex-col items-start justify-center gap-1 border-b border-navy-800 px-5">
+        <x-application-logo on="dark" />
+        <span class="truncate text-[10px] uppercase tracking-[0.15em] text-navy-300">{{ __('Service & Parts') }}</span>
     </a>
 
     <nav class="space-y-6 px-3 pb-8">
