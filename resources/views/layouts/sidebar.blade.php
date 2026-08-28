@@ -53,7 +53,7 @@
     ];
 @endphp
 
-<aside class="fixed inset-y-0 start-0 z-40 w-64 -translate-x-full overflow-y-auto bg-navy-900 transition-transform duration-200 ltr:left-0 rtl:right-0 lg:static lg:translate-x-0"
+<aside class="fixed inset-y-0 start-0 z-40 w-56 -translate-x-full overflow-y-auto bg-navy-900 transition-transform duration-200 ltr:left-0 rtl:right-0 lg:static lg:translate-x-0"
        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
     {{-- สูง h-16 เท่า topbar และมีเส้นคั่นเหมือนกัน หัวสองฝั่งจะได้อยู่ระดับเดียวกัน --}}
@@ -95,7 +95,8 @@
                                    class="flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition
                                           {{ $active ? 'bg-aqua-400 font-semibold text-navy-900' : 'text-navy-100 hover:bg-navy-800 hover:text-white' }}">
                                     <x-nav-icon :name="$item['icon']" />
-                                    {{ $item['label'] }}
+                                    {{-- truncate กันป้ายยาวผิดคาดดันทะลุ sidebar ที่แคบลงแล้ว --}}
+                                    <span class="truncate">{{ $item['label'] }}</span>
                                 </a>
                             @endif
                         </li>
