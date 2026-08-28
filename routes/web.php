@@ -3,10 +3,12 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Web\ActivityLogController;
 use App\Http\Controllers\Web\BrandController;
 use App\Http\Controllers\Web\CategoryController;
 use App\Http\Controllers\Web\CustomerContactController;
 use App\Http\Controllers\Web\CustomerController;
+use App\Http\Controllers\Web\CustomerPersonalDataController;
 use App\Http\Controllers\Web\CustomerSiteController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DeliveryController;
@@ -31,6 +33,20 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
 
     // ── ลูกค้า ──
+    /*
+     * งานตาม PDPA อยู่หน้าเดียวต่อลูกค้าหนึ่งราย (spec 8)
+     * ผูกแบบ withTrashed เพราะคำขอเข้าถึง/ลบข้อมูลมักมาถึงหลังลูกค้าถูกปิดบัญชีไปแล้ว
+     */
+    Route::controller(CustomerPersonalDataController::class)
+        ->prefix('customers/{customer}')
+        ->name('customers.')
+        ->group(function (): void {
+            Route::get('personal-data', 'show')->name('personal-data')->withTrashed();
+            Route::get('personal-data/download', 'download')->name('personal-data.download')->withTrashed();
+            Route::delete('personal-data', 'erase')->name('personal-data.erase')->withTrashed();
+            Route::post('restore', 'restore')->name('restore')->withTrashed();
+        });
+
     Route::resource('customers', CustomerController::class);
 
     Route::scopeBindings()->group(function (): void {
@@ -120,6 +136,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     // ── ผู้ใช้งานระบบ ──
     Route::resource('users', UserController::class)->except(['show']);
+
+    // ── ประวัติการใช้งาน (audit trail) ──
+    Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');
 
     // ── ตั้งค่าระบบ ──
     Route::get('settings', [SettingController::class, 'index'])->name('settings.index');

@@ -58,10 +58,10 @@
 
                 <x-dropdown-link :href="route('profile.edit')">{{ __('โปรไฟล์') }}</x-dropdown-link>
 
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" x-data>
                     @csrf
                     <x-dropdown-link :href="route('logout')"
-                                     onclick="event.preventDefault(); this.closest('form').submit();">
+                                     x-on:click.prevent="$el.closest('form').submit()">
                         {{ __('ออกจากระบบ') }}
                     </x-dropdown-link>
                 </form>

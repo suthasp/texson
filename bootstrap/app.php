@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Exceptions\Domain\DomainException;
 use App\Http\Middleware\ForceJsonResponse;
+use App\Http\Middleware\SecurityHeaders;
 use App\Http\Middleware\SetLocale;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -23,6 +24,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // security header ต้องติดไปกับทุก response ไม่ว่าจะเว็บหรือ API (spec 8)
+        $middleware->append(SecurityHeaders::class);
+
         $middleware->web(append: [
             SetLocale::class,
         ]);

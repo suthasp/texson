@@ -21,7 +21,8 @@
 
             @can('post', $delivery)
                 <form method="POST" action="{{ route('deliveries.post', $delivery) }}"
-                      onsubmit="return confirm(@js(__('บันทึกใบนี้เข้าสต็อกเลยไหม? ของจะถูกตัดออกจากคลังจริงและย้อนกลับไม่ได้')))">
+                      x-data
+                      @submit.prevent="confirm(@js(__('บันทึกใบนี้เข้าสต็อกเลยไหม? ของจะถูกตัดออกจากคลังจริงและย้อนกลับไม่ได้'))) && $el.submit()">
                     @csrf
                     <button type="submit" class="rounded-md bg-aqua-400 px-4 py-2 text-sm font-medium text-navy-900 transition hover:bg-aqua-300">
                         {{ __('บันทึกตัดสต็อก') }}

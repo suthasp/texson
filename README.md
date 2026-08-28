@@ -8,6 +8,8 @@
 
 สเปกฉบับเต็มอยู่ที่ [CLAUDE.md](CLAUDE.md) · ERD อยู่ที่ [docs/ERD.md](docs/ERD.md) · REST API อยู่ที่ [docs/API.md](docs/API.md)
 
+**คู่มือผู้ใช้ (ภาษาไทย):** [docs/USER-GUIDE.md](docs/USER-GUIDE.md) · **ความปลอดภัยและ PDPA:** [docs/SECURITY.md](docs/SECURITY.md)
+
 ---
 
 ## Tech stack
@@ -103,6 +105,8 @@ php artisan serve
 | `php artisan quotations:expire` | เปลี่ยนใบเสนอราคาที่เลยวันยืนราคาเป็นหมดอายุ (ตั้งเวลาไว้ 06:00 ทุกวัน) |
 | `php artisan schedule:work` | รัน scheduler บนเครื่องพัฒนา |
 | `php artisan route:list --path=api` | ดู endpoint ทั้งหมดของ REST API |
+| `php artisan texson:security-check` | ตรวจ checklist ความปลอดภัยข้อ 8 กับเครื่องที่รันอยู่ |
+| `php artisan texson:security-check --production` | ตรวจด้วยเกณฑ์ production — **รันก่อน deploy ทุกครั้ง** |
 
 ### รายงานและไฟล์ Excel
 
@@ -111,6 +115,20 @@ php artisan serve
 
 ส่งออกได้สามชุดตามสเปกข้อ 5 — สินค้า+สต็อกคงเหลือ · ใบเสนอราคาตามช่วงวันที่ · ประวัติการเคลื่อนไหวสต็อก
 ไฟล์ที่ได้กรองตามสิทธิ์เหมือนหน้าจอทุกประการ (ฝ่ายขายได้เฉพาะเอกสารของตัวเอง · ซ่อนคอลัมน์ราคาทุนจาก role ที่ไม่มีสิทธิ์)
+
+### ความปลอดภัยและ PDPA
+
+Security header + CSP ติดกับทุก response · ไม่มี `{!! !!}` และไม่มี inline event handler
+ทั้งโปรเจกต์ (มีเทสต์เฝ้าไว้) · อัปโหลดตรวจ mime จริงด้วย `finfo` เก็บนอก public
+เสิร์ฟผ่าน controller ที่ตรวจสิทธิ์
+
+**PDPA** — บันทึกการเข้าถึงข้อมูลผู้ติดต่อ ([ADR-026](docs/DECISIONS.md)) · ส่งออกข้อมูล
+รายคนเป็น JSON · คำขอลบล้างข้อมูลส่วนบุคคลแต่เก็บเอกสารภาษีไว้ 5 ปีตามกฎหมาย
+([ADR-024](docs/DECISIONS.md)) — ที่ **ลูกค้า → ข้อมูลส่วนบุคคล**
+
+**Audit trail** อ่านได้ที่ `/activity` พร้อมค่าก่อน/หลังทุกฟิลด์ อ่านอย่างเดียวเสมอ
+
+รายละเอียดครบทุกข้อพร้อมหลักฐานอยู่ที่ [docs/SECURITY.md](docs/SECURITY.md)
 
 ---
 
@@ -146,7 +164,7 @@ app/
 | — | REST API v1 (สเปกข้อ 6) — ครบทุก endpoint | ✅ เสร็จ |
 | 4 | Sales Order → Delivery → ตัดสต็อก + serial + backorder | ✅ เสร็จ |
 | 5 | Dashboard + รายงาน + Excel export | ✅ เสร็จ |
-| 6 | Hardening + `docs/SECURITY.md` + คู่มือผู้ใช้ | ⬜ |
+| 6 | Hardening ตามข้อ 8 + `docs/SECURITY.md` + คู่มือผู้ใช้ไทย | ✅ เสร็จ |
 
 ---
 

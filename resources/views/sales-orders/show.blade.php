@@ -23,7 +23,8 @@
 
             @can('confirm', $order)
                 <form method="POST" action="{{ route('sales-orders.confirm', $order) }}"
-                      onsubmit="return confirm(@js(__('ยืนยันใบนี้และจองของในคลัง? หลังยืนยันแล้วแก้หัวใบไม่ได้อีก')))">
+                      x-data
+                      @submit.prevent="confirm(@js(__('ยืนยันใบนี้และจองของในคลัง? หลังยืนยันแล้วแก้หัวใบไม่ได้อีก'))) && $el.submit()">
                     @csrf
                     <button type="submit" class="rounded-md bg-aqua-400 px-4 py-2 text-sm font-medium text-navy-900 transition hover:bg-aqua-300">
                         {{ __('ยืนยันและจองของ') }}

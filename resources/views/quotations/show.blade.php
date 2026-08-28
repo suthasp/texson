@@ -30,7 +30,8 @@
 
             @can('revise', $quotation)
                 <form method="POST" action="{{ route('quotations.revise', $quotation) }}"
-                      onsubmit="return confirm(@js(__('สร้างฉบับแก้ไขใหม่จากใบนี้? ใบเดิมจะถูกเก็บไว้เป็นประวัติและแก้ไม่ได้อีก')))">
+                      x-data
+                      @submit.prevent="confirm(@js(__('สร้างฉบับแก้ไขใหม่จากใบนี้? ใบเดิมจะถูกเก็บไว้เป็นประวัติและแก้ไม่ได้อีก'))) && $el.submit()">
                     @csrf
                     <x-secondary-button type="submit">{{ __('สร้างฉบับแก้ไข') }}</x-secondary-button>
                 </form>
@@ -105,7 +106,8 @@
 
                 @can('decide', $quotation)
                     <form method="POST" action="{{ route('quotations.accept', $quotation) }}"
-                          onsubmit="return confirm(@js(__('ยืนยันว่าลูกค้าตอบรับใบนี้?')))">
+                          x-data
+                      @submit.prevent="confirm(@js(__('ยืนยันว่าลูกค้าตอบรับใบนี้?'))) && $el.submit()">
                         @csrf
                         <button type="submit" class="rounded-md bg-emerald-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-emerald-500">
                             {{ __('ลูกค้าตอบรับ') }}

@@ -46,6 +46,7 @@
                 ['route' => 'brands.index', 'label' => __('ยี่ห้อ'), 'icon' => 'badge', 'can' => ['viewAny', App\Models\Brand::class]],
                 ['route' => 'warehouses.index', 'label' => __('คลังสินค้า'), 'icon' => 'building', 'can' => ['viewAny', App\Models\Warehouse::class]],
                 ['route' => 'users.index', 'label' => __('ผู้ใช้งาน'), 'icon' => 'shield', 'can' => ['viewAny', App\Models\User::class]],
+                ['route' => 'activity.index', 'label' => __('ประวัติการใช้งาน'), 'icon' => 'clipboard', 'can' => [App\Enums\PermissionName::ActivityViewAny->value]],
                 ['route' => 'settings.index', 'label' => __('ตั้งค่าระบบ'), 'icon' => 'cog', 'can' => ['viewAny', App\Models\Setting::class]],
             ],
         ],

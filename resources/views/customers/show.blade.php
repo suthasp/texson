@@ -5,6 +5,9 @@
                    :subtitle="$customer->code . ' · ' . $customer->branchLabel()"
                    :back="route('customers.index')">
         <x-slot name="actions">
+            @can('export', $customer)
+                <x-link-button :href="route('customers.personal-data', $customer)" variant="secondary">{{ __('ข้อมูลส่วนบุคคล') }}</x-link-button>
+            @endcan
             @can('update', $customer)
                 <x-link-button :href="route('customers.edit', $customer)" variant="secondary">{{ __('แก้ไข') }}</x-link-button>
             @endcan

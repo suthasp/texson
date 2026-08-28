@@ -9,7 +9,9 @@ use App\Http\Controllers\Concerns\SortsListings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\CustomerRequest;
 use App\Models\Customer;
+use App\Models\User;
 use App\Services\CustomerService;
+use App\Services\PersonalDataService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,7 +23,10 @@ class CustomerController extends Controller
     /** @var array<int, string> */
     private const SORTABLE = ['code', 'name_th', 'province', 'credit_term_days', 'created_at'];
 
-    public function __construct(private readonly CustomerService $customers) {}
+    public function __construct(
+        private readonly CustomerService $customers,
+        private readonly PersonalDataService $personalData,
+    ) {}
 
     public function index(Request $request): View
     {
@@ -32,6 +37,11 @@ class CustomerController extends Controller
             ->when($request->filled('price_tier'), fn ($q) => $q->where('price_tier', $request->string('price_tier')->toString()))
             ->when($request->filled('province'), fn ($q) => $q->where('province', $request->string('province')->toString()))
             ->when($request->filled('status'), fn ($q) => $q->where('is_active', $request->string('status')->toString() === 'active'))
+            // คนที่มีสิทธิ์ลบถาวรต้องหาลูกค้าที่ถูกลบไปแล้วเจอ ไม่งั้นทำตามคำขอ PDPA ไม่ได้
+            ->when(
+                $request->boolean('trashed') && $request->user()?->can('forceDelete', new Customer) === true,
+                fn ($q) => $q->onlyTrashed(),
+            )
             ->withCount(['contacts', 'sites']);
 
         $this->applySort($query, $request, self::SORTABLE, 'code');
@@ -40,7 +50,8 @@ class CustomerController extends Controller
             'customers' => $query->paginate(20)->withQueryString(),
             'provinces' => Customer::query()->whereNotNull('province')->distinct()->orderBy('province')->pluck('province'),
             'priceTiers' => PriceTier::options(),
-            'filters' => $request->only(['q', 'price_tier', 'province', 'status', 'sort', 'direction']),
+            'filters' => $request->only(['q', 'price_tier', 'province', 'status', 'trashed', 'sort', 'direction']),
+            'canSeeTrashed' => $request->user()?->can('forceDelete', new Customer) === true,
         ]);
     }
 
@@ -65,11 +76,22 @@ class CustomerController extends Controller
             ->with('success', __('บันทึกลูกค้า :name แล้ว', ['name' => $customer->name_th]));
     }
 
-    public function show(Customer $customer): View
+    public function show(Request $request, Customer $customer): View
     {
         $this->authorize('view', $customer);
 
         $customer->load(['contacts', 'sites.primaryContact']);
+
+        /*
+         * หน้านี้แสดงชื่อ เบอร์ และอีเมลของผู้ติดต่อ = การเข้าถึงข้อมูลส่วนบุคคลตาม PDPA
+         * จึงต้องบันทึกไว้ (spec 8) — ยุบเป็นวันละครั้งต่อคนต่อลูกค้า (ADR-026)
+         */
+        if ($customer->contacts->isNotEmpty()) {
+            /** @var User $user */
+            $user = $request->user();
+
+            $this->personalData->logAccess($customer, $user);
+        }
 
         return view('customers.show', ['customer' => $customer]);
     }

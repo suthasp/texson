@@ -47,6 +47,15 @@
                     <option value="inactive" @selected(($filters['status'] ?? '') === 'inactive')>{{ __('ปิดใช้งาน') }}</option>
                 </select>
 
+                {{-- คนที่ทำคำขอลบตาม PDPA ได้ ต้องหาลูกค้าที่ถูกลบไปแล้วเจอด้วย --}}
+                @if ($canSeeTrashed)
+                    <label class="flex shrink-0 items-center gap-2 whitespace-nowrap text-sm text-gray-600">
+                        <input type="checkbox" name="trashed" value="1" @checked($filters['trashed'] ?? false)
+                               class="rounded border-gray-300 text-navy-900 focus:ring-aqua-500">
+                        {{ __('ที่ถูกลบแล้ว') }}
+                    </label>
+                @endif
+
                 <button type="submit" class="shrink-0 rounded-md bg-navy-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-navy-800">
                     {{ __('ค้นหา') }}
                 </button>

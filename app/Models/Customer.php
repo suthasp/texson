@@ -46,6 +46,7 @@ class Customer extends Model
             'price_tier' => PriceTier::class,
             'credit_term_days' => 'integer',
             'is_active' => 'boolean',
+            'anonymized_at' => 'datetime',
         ];
     }
 
@@ -59,6 +60,7 @@ class Customer extends Model
                 'code', 'name_th', 'name_en', 'tax_id', 'branch_code',
                 'address_line', 'subdistrict', 'district', 'province', 'postcode',
                 'phone', 'email', 'credit_term_days', 'payment_terms', 'price_tier', 'is_active',
+                'anonymized_at',
             ])
             ->logOnlyDirty()
             ->dontSubmitEmptyLogs();
@@ -80,6 +82,26 @@ class Customer extends Model
     public function sites(): HasMany
     {
         return $this->hasMany(CustomerSite::class);
+    }
+
+    /** @return HasMany<Quotation, $this> */
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
+
+    /** @return HasMany<SalesOrder, $this> */
+    public function salesOrders(): HasMany
+    {
+        return $this->hasMany(SalesOrder::class);
+    }
+
+    /**
+     * ข้อมูลส่วนบุคคลถูกลบตามคำขอ PDPA แล้ว — เหลือไว้แต่ตัวเลขที่เอกสารภาษีอ้างถึง (ADR-024)
+     */
+    public function isAnonymized(): bool
+    {
+        return $this->anonymized_at !== null;
     }
 
     /**
@@ -107,6 +129,12 @@ class Customer extends Model
     public function scopeActive(Builder $query): void
     {
         $query->where('is_active', true);
+    }
+
+    /** @param  Builder<Customer>  $query */
+    public function scopeAnonymized(Builder $query): void
+    {
+        $query->whereNotNull('anonymized_at');
     }
 
     /** @param  Builder<Customer>  $query */

@@ -2,7 +2,8 @@
 
 {{-- ยืนยันก่อนทุก destructive action (spec 7) --}}
 <form method="POST" action="{{ $action }}" class="inline"
-      onsubmit="return confirm(@js($confirm ?? __('ยืนยันการลบ? การกระทำนี้ย้อนกลับไม่ได้')))">
+      x-data
+      @submit.prevent="confirm(@js($confirm ?? __('ยืนยันการลบ? การกระทำนี้ย้อนกลับไม่ได้'))) && $el.submit()">
     @csrf
     @method('DELETE')
     <button type="submit"

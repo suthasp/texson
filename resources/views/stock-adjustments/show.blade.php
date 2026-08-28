@@ -11,7 +11,8 @@
 
             @can('post', $adjustment)
                 <form method="POST" action="{{ route('stock-adjustments.post', $adjustment) }}"
-                      onsubmit="return confirm(@js(__('ปรับปรุงสต็อกตามใบนี้เลยไหม? หลัง post แล้วแก้ไขไม่ได้อีก')))">
+                      x-data
+                      @submit.prevent="confirm(@js(__('ปรับปรุงสต็อกตามใบนี้เลยไหม? หลัง post แล้วแก้ไขไม่ได้อีก'))) && $el.submit()">
                     @csrf
                     <button type="submit" class="rounded-md bg-aqua-400 px-4 py-2 text-sm font-medium text-navy-900 transition hover:bg-aqua-300">
                         {{ __('ยืนยันการปรับปรุง') }}
