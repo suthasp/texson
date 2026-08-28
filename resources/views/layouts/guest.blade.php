@@ -7,6 +7,10 @@
 
     <title>{{ config('app.name') }}</title>
 
+    <link rel="icon" type="image/png" sizes="128x128" href="{{ asset('logo/favicon-128.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('logo/favicon-128.png') }}">
+    <meta name="theme-color" content="#1B2A4A">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -16,12 +20,9 @@
 <body class="h-full bg-navy-900 font-sans text-gray-900 antialiased">
 <div class="flex min-h-full flex-col items-center justify-center px-4 py-10">
 
-    <div class="mb-6 flex items-center gap-3">
-        <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-aqua-400 text-xl font-bold text-navy-900">T</span>
-        <div>
-            <p class="text-lg font-semibold text-white">TEXSON</p>
-            <p class="text-xs text-navy-200">{{ __('ระบบอะไหล่และงานขาย') }}</p>
-        </div>
+    <div class="mb-6 flex flex-col items-center gap-1.5">
+        <x-application-logo on="dark" class="h-10 w-auto" />
+        <p class="text-xs text-navy-200">{{ __('ระบบอะไหล่และงานขาย') }}</p>
     </div>
 
     <div class="w-full max-w-md rounded-xl bg-white px-6 py-7 shadow-lg sm:px-8">

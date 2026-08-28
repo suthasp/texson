@@ -56,13 +56,10 @@
 <aside class="fixed inset-y-0 start-0 z-40 w-64 -translate-x-full overflow-y-auto bg-navy-900 transition-transform duration-200 ltr:left-0 rtl:right-0 lg:static lg:translate-x-0"
        :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'">
 
-    <div class="flex h-16 items-center gap-3 px-5">
-        <span class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-aqua-400 text-lg font-bold text-navy-900">T</span>
-        <div class="min-w-0">
-            <p class="truncate text-sm font-semibold text-white">TEXSON</p>
-            <p class="truncate text-[11px] text-navy-200">{{ __('Service & Parts') }}</p>
-        </div>
-    </div>
+    <a href="{{ route('dashboard') }}" class="flex h-16 flex-col justify-center gap-0.5 px-5">
+        <x-application-logo on="dark" class="h-6 w-auto" />
+        <span class="truncate text-[11px] text-navy-200">{{ __('Service & Parts') }}</span>
+    </a>
 
     <nav class="space-y-6 px-3 pb-8">
         @foreach ($sections as $section)

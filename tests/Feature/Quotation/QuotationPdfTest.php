@@ -57,6 +57,22 @@ it('ไฟล์ฟอนต์ Sarabun ถูก commit ไว้ในโป�
     expect(resource_path("fonts/sarabun/Sarabun-{$weight}.ttf"))->toBeFile();
 })->with(['Regular', 'Bold', 'Italic', 'BoldItalic']);
 
+it('ไฟล์โลโก้ที่ใบเสนอราคาใช้ถูก commit ไว้ในโปรเจกต์', function (string $file): void {
+    expect(public_path("logo/{$file}"))->toBeFile();
+})->with(['logo-light.png', 'logo-dark.png', 'favicon-128.png']);
+
+/**
+ * สเปกข้อ 5 บังคับให้ใบเสนอราคามีโลโก้ — ถ้าไฟล์หายไป หัวใบจะว่างเงียบ ๆ
+ * โดยไม่มี error ให้ใครเห็นจนกว่าลูกค้าจะได้ใบไปแล้ว
+ */
+it('ใบเสนอราคามีโลโก้ติดมาแม้ผู้ดูแลระบบยังไม่ได้อัปโหลดของตัวเอง', function (): void {
+    expect(app(SettingService::class)->string(SettingKey::CompanyLogoPath))->toBe('');
+
+    $data = app(QuotationPdfService::class)->data($this->quotation, 'th');
+
+    expect($data['company']['logo'])->toStartWith('data:image/png;base64,');
+});
+
 it('เรนเดอร์ PDF ภาษาไทยออกมาเป็นไฟล์ PDF ที่อ่านได้', function (): void {
     $output = app(QuotationPdfService::class)->render($this->quotation, 'th')->output();
 

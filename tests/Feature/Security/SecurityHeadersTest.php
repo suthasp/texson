@@ -31,6 +31,25 @@ it('ติด header แม้ตอนยังไม่ได้ล็อก�
         ->assertHeader('X-Frame-Options', 'DENY');
 });
 
+/**
+ * โลโก้กับ favicon เสิร์ฟจาก public/ ซึ่ง CSP ครอบด้วย img-src 'self'
+ * ถ้ามีคนย้ายไฟล์ไปโฮสต์อื่น รูปจะหายไปเงียบ ๆ เพราะ CSP บล็อก
+ */
+it('โลโก้และ favicon อยู่บนโดเมนเดียวกัน ไม่ถูก CSP บล็อก', function (): void {
+    actingAsRole(RoleName::Viewer);
+
+    $html = $this->get(route('dashboard'))->assertOk()->getContent();
+
+    expect($html)->toContain(asset('logo/favicon-128.png'))
+        ->toContain(asset('logo/logo-dark.png'));
+
+    // หน้าเข้าสู่ระบบที่ยังไม่ล็อกอินก็ต้องมีเหมือนกัน
+    $this->app['auth']->forgetGuards();
+
+    expect($this->get(route('login'))->getContent())
+        ->toContain(asset('logo/favicon-128.png'));
+});
+
 it('CSP ห้ามฝังหน้าใน iframe และห้าม object', function (): void {
     actingAsRole(RoleName::Viewer);
 

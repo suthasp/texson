@@ -7,6 +7,10 @@
 
     <title>{{ isset($title) ? $title . ' · ' : '' }}{{ config('app.name') }}</title>
 
+    <link rel="icon" type="image/png" sizes="128x128" href="{{ asset('logo/favicon-128.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('logo/favicon-128.png') }}">
+    <meta name="theme-color" content="#1B2A4A">
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@400;500;600;700&display=swap" rel="stylesheet">

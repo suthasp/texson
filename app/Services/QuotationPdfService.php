@@ -141,7 +141,7 @@ class QuotationPdfService
             'website' => $this->settings->string(SettingKey::CompanyWebsite),
             'signer_name' => $this->settings->string(SettingKey::CompanySignerName),
             'signer_position' => $this->settings->string(SettingKey::CompanySignerPosition),
-            'logo' => $this->imageData($this->settings->string(SettingKey::CompanyLogoPath)),
+            'logo' => $this->imageData($this->settings->string(SettingKey::CompanyLogoPath)) ?? $this->bundledLogo(),
             'signature' => $this->imageData($this->settings->string(SettingKey::CompanySignaturePath)),
         ];
     }
@@ -176,6 +176,21 @@ class QuotationPdfService
         $mime = Storage::disk('private')->mimeType($path) ?: 'image/png';
 
         return 'data:'.$mime.';base64,'.base64_encode(Storage::disk('private')->get($path));
+    }
+
+    /**
+     * โลโก้ที่มากับโปรเจกต์ ใช้เมื่อผู้ดูแลระบบยังไม่ได้อัปโหลดของตัวเอง
+     *
+     * สเปกข้อ 5 บังคับให้ใบเสนอราคามีโลโก้ ปล่อยให้หัวใบว่างไม่ได้ตั้งแต่วันแรก
+     * ใช้ฉบับสำหรับพื้นสว่าง เพราะพื้นกระดาษเป็นสีขาว
+     */
+    private function bundledLogo(): ?string
+    {
+        $path = public_path('logo/logo-light.png');
+
+        return is_file($path)
+            ? 'data:image/png;base64,'.base64_encode((string) file_get_contents($path))
+            : null;
     }
 
     /**
