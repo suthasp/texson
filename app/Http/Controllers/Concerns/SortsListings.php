@@ -19,12 +19,19 @@ trait SortsListings
      * @param  Builder<covariant \Illuminate\Database\Eloquent\Model>  $query
      * @param  array<int, string>  $sortable
      */
-    protected function applySort(Builder $query, Request $request, array $sortable, string $default): void
-    {
+    protected function applySort(
+        Builder $query,
+        Request $request,
+        array $sortable,
+        string $default,
+        string $defaultDirection = 'asc',
+    ): void {
         $column = $request->string('sort')->toString();
         $column = in_array($column, $sortable, true) ? $column : $default;
 
-        $direction = $request->string('direction')->toString() === 'desc' ? 'desc' : 'asc';
+        // กล่องขาเข้าอยากได้ใหม่สุดขึ้นก่อน ส่วนตารางข้อมูลหลักอยากได้เรียงจากน้อยไปมาก
+        $requested = $request->string('direction')->toString();
+        $direction = in_array($requested, ['asc', 'desc'], true) ? $requested : $defaultDirection;
 
         $query->orderBy($column, $direction);
     }

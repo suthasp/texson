@@ -8,6 +8,9 @@
 
 สเปกฉบับเต็มอยู่ที่ [CLAUDE.md](CLAUDE.md) · ERD อยู่ที่ [docs/ERD.md](docs/ERD.md) · REST API อยู่ที่ [docs/API.md](docs/API.md)
 
+**หน้าเว็บสาธารณะ:** `/` คือหน้า landing ของ TEXSON (ไทย/อังกฤษ) พร้อมฟอร์ม "ปรึกษาฟรี" ที่เก็บคำขอลงระบบ
+พนักงานกด **เข้าสู่ระบบ** บนแถบบนเพื่อเข้าหลังบ้าน ([ADR-029](docs/DECISIONS.md))
+
 **คู่มือผู้ใช้ (ภาษาไทย):** [docs/USER-GUIDE.md](docs/USER-GUIDE.md) · **ความปลอดภัยและ PDPA:** [docs/SECURITY.md](docs/SECURITY.md)
 
 ---

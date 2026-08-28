@@ -202,7 +202,9 @@ class SecurityCheck extends Command
          * ถ้าเทียบด้วยชื่อจะได้ค่าว่างซึ่งอ่านไม่รู้เรื่องเวลาตรวจ
          */
         $allowed = [
-            '/', 'login', 'logout', 'register',
+            // หน้าเว็บสาธารณะและฟอร์มติดต่อ — ตั้งใจให้เข้าได้โดยไม่ล็อกอิน (ADR-029)
+            '/', 'contact',
+            'login', 'logout', 'register',
             'forgot-password', 'reset-password', 'reset-password/{token}',
             'sanctum/csrf-cookie',
         ];

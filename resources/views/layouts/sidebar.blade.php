@@ -21,6 +21,7 @@
         [
             'label' => __('งานขาย'),
             'items' => [
+                ['route' => 'leads.index', 'label' => __('คำขอติดต่อ'), 'icon' => 'users', 'can' => ['viewAny', App\Models\ContactLead::class]],
                 ['route' => 'quotations.index', 'label' => __('ใบเสนอราคา'), 'icon' => 'document', 'can' => ['viewAny', App\Models\Quotation::class]],
                 ['route' => 'sales-orders.index', 'label' => __('ใบสั่งขาย'), 'icon' => 'clipboard', 'can' => ['viewAny', App\Models\SalesOrder::class]],
                 ['route' => 'deliveries.index', 'label' => __('ใบส่งของ'), 'icon' => 'truck', 'can' => ['viewAny', App\Models\Delivery::class]],

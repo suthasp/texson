@@ -6,6 +6,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Web\ActivityLogController;
 use App\Http\Controllers\Web\BrandController;
 use App\Http\Controllers\Web\CategoryController;
+use App\Http\Controllers\Web\ContactLeadController;
 use App\Http\Controllers\Web\CustomerContactController;
 use App\Http\Controllers\Web\CustomerController;
 use App\Http\Controllers\Web\CustomerPersonalDataController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Web\CustomerSiteController;
 use App\Http\Controllers\Web\DashboardController;
 use App\Http\Controllers\Web\DeliveryController;
 use App\Http\Controllers\Web\GoodsReceiptController;
+use App\Http\Controllers\Web\LandingController;
 use App\Http\Controllers\Web\ProductController;
 use App\Http\Controllers\Web\QuotationController;
 use App\Http\Controllers\Web\ReportController;
@@ -27,7 +29,20 @@ use App\Http\Controllers\Web\UserController;
 use App\Http\Controllers\Web\WarehouseController;
 use Illuminate\Support\Facades\Route;
 
-Route::redirect('/', '/dashboard')->name('home');
+/*
+|--------------------------------------------------------------------------
+| หน้าเว็บสาธารณะ
+|--------------------------------------------------------------------------
+|
+| สองเส้นทางนี้เป็นที่เดียวที่คนนอกองค์กรเข้าถึงได้โดยไม่ต้องล็อกอิน (ADR-029)
+| ฟอร์มติดต่อจำกัดที่ 5 ครั้ง/นาที/IP เท่ากับหน้าเข้าสู่ระบบ เพราะเป็นช่องเดียว
+| ที่คนนอกเขียนข้อมูลลงฐานได้
+|
+*/
+Route::get('/', [LandingController::class, 'index'])->name('landing');
+Route::post('/contact', [LandingController::class, 'contact'])
+    ->middleware('throttle:5,1')
+    ->name('landing.contact');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('/dashboard', DashboardController::class)->name('dashboard');
@@ -136,6 +151,9 @@ Route::middleware(['auth', 'verified'])->group(function (): void {
 
     // ── ผู้ใช้งานระบบ ──
     Route::resource('users', UserController::class)->except(['show']);
+
+    // ── คำขอติดต่อจากหน้าเว็บ ──
+    Route::resource('leads', ContactLeadController::class)->only(['index', 'show', 'update', 'destroy']);
 
     // ── ประวัติการใช้งาน (audit trail) ──
     Route::get('activity', [ActivityLogController::class, 'index'])->name('activity.index');

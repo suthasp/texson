@@ -145,6 +145,12 @@ enum PermissionName: string
     case SettingViewAny = 'setting.viewAny';
     case SettingUpdate = 'setting.update';
 
+    // ── คำขอติดต่อจากหน้าเว็บสาธารณะ ──
+    case LeadViewAny = 'lead.viewAny';
+    case LeadView = 'lead.view';
+    case LeadUpdate = 'lead.update';
+    case LeadDelete = 'lead.delete';
+
     // ── ประวัติการใช้งาน ──
     case ActivityViewAny = 'activity.viewAny';
 

@@ -74,6 +74,10 @@ class RolePermissionSeeder extends Seeder
             PermissionName::ProductViewCost->value,
             PermissionName::CategoryViewAny->value,
             PermissionName::BrandViewAny->value,
+            // คำขอจากหน้าเว็บคืองานขาย ฝ่ายขายจึงตามเรื่องเองได้ แต่ลบทิ้งไม่ได้
+            PermissionName::LeadViewAny->value,
+            PermissionName::LeadView->value,
+            PermissionName::LeadUpdate->value,
             // ฝ่ายขายต้องเห็นยอดคงเหลือตอนออกใบเสนอราคา แต่ไม่ได้แตะเอกสารคลัง
             PermissionName::StockViewAny->value,
             PermissionName::SerialViewAny->value,

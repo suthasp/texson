@@ -24,3 +24,8 @@
         @apply whitespace-nowrap px-4 py-3 text-sm text-gray-700;
     }
 }
+
+/* Alpine ซ่อน element ที่มี x-cloak จนกว่าจะพร้อม กันเมนูแวบขึ้นมาตอนหน้าโหลด */
+[x-cloak] {
+    display: none !important;
+}
