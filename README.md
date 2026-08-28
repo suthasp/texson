@@ -19,9 +19,9 @@
 | Framework | Laravel 12.x ([เหตุผลที่ไม่ใช้ 11](docs/DECISIONS.md)) |
 | PHP | 8.3 — `declare(strict_types=1);` ทุกไฟล์ใน `app/` |
 | DB | MySQL 8.0 / MariaDB 10.6+ · `utf8mb4_unicode_ci` |
-| UI | Blade + Tailwind CSS 3 + Alpine.js · Laravel Breeze (Blade stack) |
+| UI | Blade + Tailwind CSS 3 + Alpine.js · Laravel Breeze (Blade stack) · ฟอนต์ **Prompt** จาก Google Fonts ([ADR-028](docs/DECISIONS.md)) |
 | Auth | Breeze + `spatie/laravel-permission` |
-| PDF | `barryvdh/laravel-dompdf` + ฟอนต์ Sarabun |
+| PDF | `barryvdh/laravel-dompdf` + ฟอนต์ Sarabun (แยกจากฟอนต์หน้าจอ) |
 | Excel | `maatwebsite/excel` |
 | Audit | `spatie/laravel-activitylog` |
 | API | Laravel Sanctum (REST v1) — ดู [docs/API.md](docs/API.md) |

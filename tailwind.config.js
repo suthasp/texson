@@ -40,8 +40,10 @@ export default {
                 },
             },
             fontFamily: {
-                sans: ['"IBM Plex Sans Thai"', 'Sarabun', ...defaultTheme.fontFamily.sans],
-                mono: ['"IBM Plex Mono"', ...defaultTheme.fontFamily.mono],
+                // Prompt โหลดจาก Google Fonts ใน layout · Sarabun เป็นตัวสำรองสำหรับเครื่องที่ต่อเน็ตไม่ได้
+                sans: ['Prompt', 'Sarabun', ...defaultTheme.fontFamily.sans],
+                // ใช้กับรหัส เลขที่เอกสาร และ IP ซึ่งเป็น ASCII ล้วน จึงใช้ stack มาตรฐานพอ
+                mono: [...defaultTheme.fontFamily.mono],
             },
         },
     },
