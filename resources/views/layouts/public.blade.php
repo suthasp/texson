@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full scroll-smooth">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="h-full motion-safe:scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,7 +18,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="h-full bg-white font-sans text-navy-900 antialiased">
+<body id="top" class="h-full bg-white font-sans text-navy-900 antialiased">
 
 {{-- ── แถบบนสุด ── --}}
 <header x-data="{ open: false }"
@@ -103,14 +103,28 @@
 
 {{-- ── ท้ายหน้า ── --}}
 <footer class="border-t border-navy-900">
-    <div class="mx-auto max-w-6xl px-4 py-8 text-center text-sm text-gray-500 sm:px-6 lg:px-8">
-        <p>&copy; {{ now()->year }} Texson — {{ __('ที่ปรึกษา Data Center Facility · Audit · PM Planning · Training') }}</p>
+    <div class="mx-auto flex max-w-6xl flex-col items-center gap-4 px-4 py-8 text-sm text-gray-500 sm:px-6 lg:px-8 md:flex-row md:justify-between md:gap-6">
+        <div class="text-center md:text-start">
+            <p>&copy; {{ now()->year }} Texson — {{ __('ที่ปรึกษา Data Center Facility · Audit · PM Planning · Training') }}</p>
 
-        <p class="mt-2">
-            <a href="{{ route('login') }}" class="text-gray-500 underline underline-offset-2 transition hover:text-navy-900">
-                {{ __('เข้าสู่ระบบสำหรับพนักงาน') }}
-            </a>
-        </p>
+            <p class="mt-1">
+                <a href="{{ route('login') }}" class="underline underline-offset-2 transition hover:text-navy-900">
+                    {{ __('เข้าสู่ระบบสำหรับพนักงาน') }}
+                </a>
+            </p>
+        </div>
+
+        {{--
+            ใช้ลิงก์ไปยัง #top ไม่ใช่ JavaScript — เลื่อนนุ่มด้วย motion-safe:scroll-smooth ของ CSS
+            จึงทำงานได้แม้ JS โหลดไม่ขึ้น และไม่ต้องผ่อนปรน CSP เพิ่ม
+        --}}
+        <a href="#top"
+           class="inline-flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 font-medium text-aqua-600 transition hover:bg-gray-100 hover:text-aqua-700">
+            {{ __('กลับขึ้นด้านบน') }}
+            <svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 19.5v-15m0 0-6.75 6.75M12 4.5l6.75 6.75" />
+            </svg>
+        </a>
     </div>
 </footer>
 

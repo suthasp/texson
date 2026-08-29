@@ -46,6 +46,22 @@ it('คนที่ล็อกอินแล้วเห็นปุ่มไ�
         ->assertSee(__('แดชบอร์ด'));
 });
 
+/**
+ * หน้ายาว 8 ส่วน ปุ่มกลับขึ้นบนจึงต้องมี และต้องมีจุดหมาย #top ให้ลิงก์ชี้ไปจริง
+ * ถ้า id หาย ลิงก์จะกลายเป็นลิงก์ตายที่ไม่มี error ให้ใครเห็น
+ */
+it('มีปุ่มกลับขึ้นด้านบนที่ชี้ไปจุดหมายจริง', function (): void {
+    $html = $this->get('/')->assertOk()->getContent();
+
+    expect($html)->toContain(__('กลับขึ้นด้านบน'))
+        ->toContain('href="#top"')
+        ->toContain('id="top"');
+});
+
+it('ปุ่มกลับขึ้นด้านบนแปลเป็นอังกฤษด้วย', function (): void {
+    $this->get('/?lang=en')->assertOk()->assertSee('Back to top');
+});
+
 it('สลับเป็นภาษาอังกฤษได้ทั้งหน้า', function (): void {
     $this->get('/?lang=en')
         ->assertOk()
